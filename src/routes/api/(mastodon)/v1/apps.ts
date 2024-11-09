@@ -6,6 +6,7 @@ import {
   scopes as scopesTable,
 } from "../../../../application/db/models.ts";
 import { z } from "zod";
+import { generateRandomId } from "../../../../application/db/utils.ts";
 
 const appPayloadSchema = z.object({
   client_name: z.string(),
@@ -37,8 +38,8 @@ export const handler: Handlers = {
       const [newApp] = await tx.insert(applications).values({
         name,
         website,
-        client_id: "", // TODO Generate ID
-        client_secret: "", // TODO Generate secret
+        client_id: generateRandomId(), // TODO Generate ID
+        client_secret: generateRandomId(), // TODO Generate secret
       }).returning();
 
       const scopes = appScopes.split(" ").map((scope) => ({
