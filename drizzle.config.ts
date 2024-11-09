@@ -1,12 +1,13 @@
 import { defineConfig } from "drizzle-kit";
+import process from "node:process";
 
 export default defineConfig({
-  out: "./drizzle",
-  schema: "./schemas.ts",
+  schema: "./src/application/db/models.ts",
   dialect: "sqlite",
   dbCredentials: {
-    url: "file:./local.sqlite",
+    url: process.env.DB_CONNECTION!,
   },
+  casing: "snake_case",
   verbose: true,
   strict: true,
 });
