@@ -1,0 +1,10 @@
+{
+  "*.{ts,tsx}": [
+    "deno lint",
+    "deno fmt"
+  ],
+
+  "*.{md,json,jsonc}": [
+    "deno fmt"
+  ]
+}
