@@ -36,7 +36,9 @@ export const scopesRelations = relations(scopes, ({ one }) => ({
 }));
 
 export const redirectUris = sqliteTable("redirect_uri", {
-  applicationId: int().references(() => applications.id),
+  applicationId: int().notNull().references(() => applications.id, {
+    onDelete: "cascade",
+  }),
   uri: text().notNull(),
 });
 

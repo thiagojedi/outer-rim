@@ -10,4 +10,8 @@ import { start } from "$fresh/server.ts";
 import manifest from "./fresh.gen.ts";
 import config from "./fresh.config.ts";
 
+import { prepareDb } from "./application/db/client.ts";
+
+await prepareDb();
+
 await start(manifest, config);

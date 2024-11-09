@@ -5,7 +5,7 @@ import {
   redirectUris,
   scopes as scopesTable,
 } from "../../../../application/db/models.ts";
-import { z } from "https://deno.land/x/zod/mod.ts";
+import { z } from "zod";
 
 const appPayloadSchema = z.object({
   client_name: z.string(),
@@ -28,14 +28,15 @@ export const handler: Handlers = {
 
     const transactionReturn = await db.transaction(async (tx) => {
       const {
-        scopes: appScopes,
+        client_name: name,
         redirect_uris,
-        client_name,
-        ...application
+        scopes: appScopes,
+        website,
       } = payload;
+
       const [newApp] = await tx.insert(applications).values({
-        ...application,
-        name: client_name,
+        name,
+        website,
         client_id: "", // TODO Generate ID
         client_secret: "", // TODO Generate secret
       }).returning();

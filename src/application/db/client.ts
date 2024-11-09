@@ -1,5 +1,4 @@
-import "jsr:@std/dotenv/load";
-
+import "$std/dotenv/load.ts";
 import { drizzle } from "drizzle-orm/libsql/node";
 import * as schema from "./models.ts";
 
@@ -8,3 +7,10 @@ export const db = drizzle({
   schema,
   casing: "snake_case",
 });
+
+export const prepareDb = async () => {
+  await db.$client.executeMultiple(`
+        PRAGMA journal_mode = wal ;
+        PRAGMA foreign_keys = on ;
+    `);
+};
