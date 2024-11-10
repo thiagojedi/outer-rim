@@ -18,7 +18,6 @@
     "@auth/core": "npm:@auth/core@^0.37.3",
     "@fedify/fedify": "jsr:@fedify/fedify@^1.2.3",
     "@libsql/client": "npm:@libsql/client@^0.14.0",
-    "@types/oauth2-server": "npm:@types/oauth2-server@^3.0.18",
     "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-orm": "npm:drizzle-orm@^0.36.1",
     "lint-staged": "npm:lint-staged@^15.2.10",

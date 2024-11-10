@@ -3,8 +3,8 @@ import { OAuth2Config, TokenEndpointHandler } from "@auth/core/providers";
 import { Handler } from "$fresh/server.ts";
 
 const options = {
-  clientId: "9_mpl9d8ddXoJ1kyU_4p8T6cP72Gk3kEKbNgVXww1xg",
-  clientSecret: "XEXipvK-78KGtBbrPCAvM4YOj0eQKwrwWM5f-XfDSuc",
+  clientId: "qCwcuNuk5d3lYG3co5WuBddFYYOk-RXBg2bAlNaXH3w",
+  clientSecret: "0zikjdnBMXvC4EyTxl651ReVMJ1xcsCfvlJsOlzR_xc",
   issuer: "http://localhost:8000",
 };
 
@@ -14,7 +14,8 @@ const CustomProvider: OAuth2Config<
   id: "custom_mastodon",
   name: "Custom Mastodon",
   type: "oauth",
-  authorization: `${options.issuer}/oauth/authorize?scope=read`,
+  authorization:
+    `${options.issuer}/oauth/authorize?scope=read%20write%20follow%20push`,
   token: {
     url: `${options.issuer}/oauth/token`,
     request: async (

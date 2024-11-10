@@ -1,5 +1,5 @@
-import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { relations, sql } from "drizzle-orm";
+import { int, sqliteTable as table, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 
 const timestamps = {
   updatedAt: text(),
@@ -7,44 +7,46 @@ const timestamps = {
   deletedAt: text(),
 };
 
-export const applications = sqliteTable("applications", {
+export const applications = table("applications", {
   id: int().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
   website: text(),
-  client_id: text(),
-  client_secret: text(),
+  client_id: text().notNull().unique(),
+  client_secret: text().notNull(),
   ...timestamps,
 });
 
-export const applicationsRelations = relations(applications, ({ many }) => ({
-  scopes: many(scopes),
-  redirectUris: many(redirectUris),
-}));
-
-export const scopes = sqliteTable("scopes", {
+export const scopes = table("scopes", {
   applicationId: int().notNull().references(() => applications.id, {
     onDelete: "cascade",
   }),
   scope: text().notNull(),
 });
 
-export const scopesRelations = relations(scopes, ({ one }) => ({
-  application: one(applications, {
-    fields: [scopes.applicationId],
-    references: [applications.id],
-  }),
-}));
-
-export const redirectUris = sqliteTable("redirect_uri", {
+export const redirectUris = table("redirect_uri", {
   applicationId: int().notNull().references(() => applications.id, {
     onDelete: "cascade",
   }),
   uri: text().notNull(),
 });
 
-export const redirectUrisRelations = relations(redirectUris, ({ one }) => ({
-  application: one(applications, {
-    fields: [redirectUris.applicationId],
-    references: [applications.id],
+export const users = table("users", {
+  id: int().primaryKey({ autoIncrement: true }),
+  username: text().notNull().unique(),
+  password: text().notNull(),
+});
+
+export const tokens = table("auth_tokens", {
+  accessToken: text().notNull(),
+  accessTokenExpiresAt: text().notNull(),
+  refreshToken: text(), // NOTE this is only needed if you need refresh tokens down the line
+  refreshTokenExpiresAt: text(),
+  clientId: int().notNull().references(() => applications.client_id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
   }),
-}));
+  userId: int().notNull().references(() => users.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+});

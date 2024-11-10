@@ -50,7 +50,12 @@ export const getAppClientUris = (
   clientId: string,
   clientSecret: string | null,
 ) =>
-  db.select({ redirect_uris: redirectUris.uri })
+  db.select({
+    id: applications.id,
+    redirect_uris: redirectUris.uri,
+    clientId: applications.client_id,
+    clientSecret: applications.client_secret,
+  })
     .from(applications)
     .leftJoin(redirectUris, eq(applications.id, redirectUris.applicationId))
     .where(

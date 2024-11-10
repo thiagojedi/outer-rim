@@ -1,31 +1,12 @@
 import { Handlers } from "$fresh/server.ts";
-import { oauthServer } from "../../application/auth/server.ts";
-import {
-  Request as OAuthRequest,
-  Response as OAuthResponse,
-} from "oauth2-server";
+import { getOAuthServer } from "../../application/auth/server.ts";
 
 export const handler: Handlers = {
-  POST: async (req, ctx) => {
-    const query = Object.fromEntries(ctx.url.searchParams.entries());
+  POST: (req, ctx) => {
+    //TODO Login in and confirm before authorize on OAuth
+    const loggedUser = { user: { id: 1 } };
 
-    const response = new OAuthResponse();
-    await oauthServer.authorize(
-      new OAuthRequest({
-        query,
-        method: req.method,
-        headers: req.headers,
-        body: { user: { user: 1 } },
-      }),
-      response,
-      {
-        authenticateHandler: {
-          handle: (req: OAuthRequest) => req.body.user,
-        },
-      },
-    );
-
-    return new Response(null, response);
+    return getOAuthServer(req, ctx).authorize(loggedUser);
   },
 };
 

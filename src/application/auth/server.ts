@@ -1,6 +1,8 @@
-import OAuth2Server from "npm:oauth2-server";
-import { getAppClientUris } from "./repositories/clients.ts";
 import crypto from "node:crypto";
+// @ts-types="npm:@types/oauth2-server"
+import OAuth2Server from "oauth2-server";
+import { getAppClientUris } from "./repositories/clients.ts";
+import { saveToken } from "./repositories/tokens.ts";
 
 const log = console.log;
 
@@ -8,9 +10,9 @@ const mock = { // Here is a fast overview of what your db model should look like
   authorizationCode: {
     authorizationCode: "", // A string that contains the code
     expiresAt: new Date(), // A date when the code expires
-    redirectUri: "" as string | undefined, // A string of where to redirect to with this code
-    client: null as unknown, // See the client section
-    user: null as unknown, // Whatever you want... This is where you can be flexible with the protocol
+    redirectUri: "", // A string of where to redirect to with this code
+    client: null as unknown as OAuth2Server.Client, // See the client section
+    user: null as unknown as OAuth2Server.User, // Whatever you want... This is where you can be flexible with the protocol
   },
   client: { // Application wanting to authenticate with this server
     clientId: "", // Unique string representing the client
@@ -23,8 +25,8 @@ const mock = { // Here is a fast overview of what your db model should look like
     accessTokenExpiresAt: new Date(), // Date the token expires
     refreshToken: "",
     refreshTokenExpiresAt: new Date(),
-    client: null as unknown, // Client associated with this token
-    user: null as unknown, // User associated with this token
+    client: null as unknown as OAuth2Server.Client, // Client associated with this token
+    user: null as unknown as OAuth2Server.User, // User associated with this token
   },
 };
 
@@ -41,14 +43,22 @@ const model = {
 
     const client = await getAppClientUris(clientId, clientSecret);
 
-    mock.client = {
+    // mock.client = {
+    //     clientId: clientId,
+    //     clientSecret: clientSecret!,
+    //     grants: ["authorization_code", "refresh_token"],
+    //     redirectUris: client.map((uri) => uri.redirect_uris!),
+    // };
+
+    const uris = client.map((uri) => uri.redirect_uris!);
+
+    return client.length && {
+      id: client.at(0)!.id.toString(),
       clientId: clientId,
       clientSecret: clientSecret!,
       grants: ["authorization_code", "refresh_token"],
-      redirectUris: client.map((uri) => uri.redirect_uris!),
+      redirectUris: uris,
     };
-
-    return new Promise((res) => res(mock.client));
   },
   // generateAccessToken: (client, user, scope) => { // generates access tokens
   //   log({
@@ -60,7 +70,11 @@ const model = {
   //   })
   //
   // },
-  saveToken: (token: typeof mock.token, client: unknown, user: unknown) => {
+  saveToken: async (
+    token: typeof mock.token,
+    client: OAuth2Server.Client,
+    user: OAuth2Server.User,
+  ) => {
     /* This is where you insert the token into the database */
     log({
       title: "Save Token",
@@ -70,22 +84,28 @@ const model = {
         { name: "user", value: user },
       ],
     });
-    mock.token = {
-      accessToken: token.accessToken,
-      accessTokenExpiresAt: token.accessTokenExpiresAt,
-      refreshToken: token.refreshToken, // NOTE this is only needed if you need refresh tokens down the line
-      refreshTokenExpiresAt: token.refreshTokenExpiresAt,
-      client: client,
-      user: user,
+
+    const savedToken = await saveToken(
+      token as Required<typeof token>,
+      client.clientId,
+      user.user.id,
+    );
+
+    const accessTokenExpiresAt = new Date(
+      Date.parse(savedToken!.accessTokenExpiresAt),
+    );
+    const refreshTokenExpiresAt = savedToken?.refreshTokenExpiresAt
+      ? new Date(Date.parse(savedToken.refreshTokenExpiresAt))
+      : undefined;
+
+    return savedToken && {
+      ...savedToken,
+      refreshToken: savedToken.refreshToken ?? undefined,
+      accessTokenExpiresAt,
+      refreshTokenExpiresAt,
+      client,
+      user,
     };
-    // mock.token = {
-    //     "access_token": token.accessToken,
-    //     "token_type": "Bearer",
-    //     "scope": "read write follow push",
-    //     "created_at": Date.now(),
-    // };
-    console.log("Saved token", mock.token);
-    return new Promise((resolve) => resolve(mock.token));
   },
   getAccessToken: (token: unknown) => {
     /* This is where you select the token from the database where the code matches */
@@ -95,8 +115,10 @@ const model = {
         { name: "token", value: token },
       ],
     });
-    if (!token || token === "undefined") return false;
-    return new Promise((resolve) => resolve(mock.token));
+    if (!token || token === "undefined") {
+      return new Promise<false>((resolve) => resolve(false));
+    }
+    return new Promise<OAuth2Server.Token>((resolve) => resolve(mock.token));
   },
   getRefreshToken: (token: unknown) => {
     /* Retrieves the token from the database */
@@ -121,8 +143,8 @@ const model = {
     return new Promise((resolve) => resolve(true));
   },
   generateAuthorizationCode: (
-    client: unknown,
-    user: unknown,
+    client: OAuth2Server.Client,
+    user: OAuth2Server.User,
     _scope: unknown,
   ) => {
     /*
@@ -158,9 +180,9 @@ const model = {
       .digest("hex");
   },
   saveAuthorizationCode: (
-    code: typeof mock.authorizationCode,
-    client: unknown,
-    user: unknown,
+    code: OAuth2Server.AuthorizationCode,
+    client: OAuth2Server.Client,
+    user: OAuth2Server.User,
   ) => {
     /* This is where you store the access code data into the database */
     log({
@@ -176,15 +198,15 @@ const model = {
       expiresAt: code.expiresAt,
       client: client,
       user: user,
-      redirectUri: undefined,
+      redirectUri: code.redirectUri,
     };
-    return new Promise((resolve) =>
+    return new Promise<OAuth2Server.AuthorizationCode>((resolve) =>
       resolve(Object.assign({
         redirectUri: `${code.redirectUri}`,
       }, mock.authorizationCode))
     );
   },
-  getAuthorizationCode: (authorizationCode: unknown) => {
+  getAuthorizationCode: (authorizationCode: string) => {
     /* this is where we fetch the stored data from the code */
     log({
       title: "Get Authorization code",
@@ -192,11 +214,13 @@ const model = {
         { name: "authorizationCode", value: authorizationCode },
       ],
     });
-    return new Promise((resolve) => {
+    return new Promise<typeof mock.authorizationCode>((resolve) => {
       resolve(mock.authorizationCode);
     });
   },
-  revokeAuthorizationCode: (authorizationCode: unknown) => {
+  revokeAuthorizationCode: (
+    authorizationCode: OAuth2Server.AuthorizationCode,
+  ) => {
     /* This is where we delete codes */
     log({
       title: "Revoke Authorization Code",
@@ -208,11 +232,11 @@ const model = {
       authorizationCode: "", // A string that contains the code
       expiresAt: new Date(), // A date when the code expires
       redirectUri: "", // A string of where to redirect to with this code
-      client: null, // See the client section
-      user: null, // Whatever you want... This is where you can be flexible with the protocol
+      client: null as unknown as OAuth2Server.Client, // See the client section
+      user: null as unknown as OAuth2Server.User, // Whatever you want... This is where you can be flexible with the protocol
     };
     const codeWasFoundAndDeleted = true; // Return true if code found and deleted, false otherwise
-    return new Promise((resolve) => resolve(codeWasFoundAndDeleted));
+    return new Promise<boolean>((resolve) => resolve(codeWasFoundAndDeleted));
   },
   verifyScope: (token: unknown, scope: unknown) => {
     /* This is where we check to make sure the client has access to this scope */
@@ -224,14 +248,58 @@ const model = {
       ],
     });
     const userHasAccess = true; // return true if this user / client combo has access to this resource
-    return new Promise((resolve) => resolve(userHasAccess));
+    return new Promise<boolean>((resolve) => resolve(userHasAccess));
   },
 };
 
-export const oauthServer = new OAuth2Server({
+const oauthServer = new OAuth2Server({
   model,
-  grants: ["authorization_code", "refresh_token"],
+  // grants: ["authorization_code", "refresh_token"],
   accessTokenLifetime: 60 * 60 * 24, // 24 hours, or 1 day
   allowEmptyState: true,
   allowExtendedTokenAttributes: true,
 });
+
+export const getOAuthServer = (req: Request, ctx: { url: URL }) => {
+  return {
+    authorize: async (user: unknown) => {
+      const query = Object.fromEntries(ctx.url.searchParams.entries());
+      const request = new OAuth2Server.Request({
+        query,
+        method: req.method,
+        headers: req.headers,
+        body: { user },
+      });
+      const response = new OAuth2Server.Response();
+      await oauthServer.authorize(
+        request,
+        response,
+        {
+          authenticateHandler: {
+            handle: (req: OAuth2Server.Request) => req.body.user,
+          },
+        },
+      );
+      return new Response(null, response);
+    },
+    token: async () => {
+      const query = Object.fromEntries(ctx.url.searchParams.entries());
+      const request = new OAuth2Server.Request({
+        query,
+        method: req.method,
+        headers: Object.fromEntries(req.headers.entries()),
+        body: Object.fromEntries((await req.formData()).entries()),
+      });
+      const response = new OAuth2Server.Response();
+
+      await oauthServer.token(request, response);
+
+      const { headers, status, body } = response;
+
+      return Response.json(body, {
+        headers,
+        status,
+      });
+    },
+  };
+};
