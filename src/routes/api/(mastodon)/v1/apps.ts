@@ -1,6 +1,6 @@
 import { Handlers, STATUS_CODE } from "$fresh/server.ts";
 import { z } from "zod";
-import { createClientApp } from "../../../../application/auth/repositories/clients.ts";
+import { createClientApp } from "../../../../auth/repositories/clients.ts";
 
 const appPayloadSchema = z.object({
   client_name: z.string(),

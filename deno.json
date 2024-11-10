@@ -18,6 +18,7 @@
     "@auth/core": "npm:@auth/core@^0.37.3",
     "@fedify/fedify": "jsr:@fedify/fedify@^1.2.3",
     "@libsql/client": "npm:@libsql/client@^0.14.0",
+    "@logtape/logtape": "jsr:@logtape/logtape@^0.7.1",
     "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-orm": "npm:drizzle-orm@^0.36.1",
     "lint-staged": "npm:lint-staged@^15.2.10",
@@ -30,5 +31,8 @@
     "zod": "https://deno.land/x/zod/mod.ts"
   },
   "nodeModulesDir": "auto",
-  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" }
+  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
+  "unstable": [
+    "temporal"
+  ]
 }
