@@ -5,6 +5,7 @@
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
+import * as $api_mastodon_v1_accounts_verify_credentials from "./routes/api/(mastodon)/v1/accounts/verify_credentials.ts";
 import * as $api_mastodon_v1_apps from "./routes/api/(mastodon)/v1/apps.ts";
 import * as $api_mastodon_v1_instance from "./routes/api/(mastodon)/v1/instance.ts";
 import * as $api_joke from "./routes/api/joke.ts";
@@ -21,6 +22,8 @@ const manifest = {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
+    "./routes/api/(mastodon)/v1/accounts/verify_credentials.ts":
+      $api_mastodon_v1_accounts_verify_credentials,
     "./routes/api/(mastodon)/v1/apps.ts": $api_mastodon_v1_apps,
     "./routes/api/(mastodon)/v1/instance.ts": $api_mastodon_v1_instance,
     "./routes/api/joke.ts": $api_joke,

@@ -1,5 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from "../../db/client.ts";
-import { tokens } from "../../db/models.ts";
+import { applications, tokens, users } from "../../db/models.ts";
 
 export const saveToken = (
   token: {
@@ -22,3 +23,11 @@ export const saveToken = (
     userId,
   }).returning().then((r) => r.at(0));
 };
+
+export const getToken = (token: string) =>
+  db.select().from(tokens)
+    .leftJoin(users, eq(tokens.userId, users.id))
+    .leftJoin(applications, eq(tokens.clientId, applications.client_id))
+    .where(eq(tokens.accessToken, token))
+    .limit(1)
+    .then((value) => value.at(0));

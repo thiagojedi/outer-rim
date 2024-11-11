@@ -2,7 +2,8 @@ import crypto from "node:crypto";
 // @ts-types="npm:@types/oauth2-server"
 import OAuth2Server from "oauth2-server";
 import { getAppClientUris } from "./repositories/clients.ts";
-import { saveToken } from "./repositories/tokens.ts";
+import { getToken, saveToken } from "./repositories/tokens.ts";
+import { STATUS_CODE } from "$fresh/server.ts";
 
 const log = console.log;
 
@@ -23,8 +24,8 @@ const mock = { // Here is a fast overview of what your db model should look like
   token: {
     accessToken: "", // Access token that the server created
     accessTokenExpiresAt: new Date(), // Date the token expires
-    refreshToken: "",
     refreshTokenExpiresAt: new Date(),
+    refreshToken: "",
     client: null as unknown as OAuth2Server.Client, // Client associated with this token
     user: null as unknown as OAuth2Server.User, // User associated with this token
   },
@@ -107,18 +108,38 @@ const model = {
       user,
     };
   },
-  getAccessToken: (token: unknown) => {
+  getAccessToken: async (accessToken: string) => {
     /* This is where you select the token from the database where the code matches */
     log({
       title: "Get Access Token",
       parameters: [
-        { name: "token", value: token },
+        { name: "token", value: accessToken },
       ],
     });
-    if (!token || token === "undefined") {
-      return new Promise<false>((resolve) => resolve(false));
+    const response = await getToken(accessToken);
+
+    if (!response) {
+      return false;
     }
-    return new Promise<OAuth2Server.Token>((resolve) => resolve(mock.token));
+
+    const { auth_tokens: token, users: user, applications: client } = response;
+
+    return {
+      ...token,
+      refreshToken: token.refreshToken ?? undefined,
+      accessTokenExpiresAt: new Date(
+        Date.parse(token.accessTokenExpiresAt),
+      ),
+      refreshTokenExpiresAt: token.refreshTokenExpiresAt
+        ? new Date(Date.parse(token.refreshTokenExpiresAt))
+        : undefined,
+      client: {
+        ...client!,
+        id: client!.id.toString(),
+        grants: ["authorization_code", "refresh_token"],
+      },
+      user: user!,
+    };
   },
   getRefreshToken: (token: unknown) => {
     /* Retrieves the token from the database */
@@ -283,12 +304,35 @@ export const getOAuthServer = (req: Request, ctx: { url: URL }) => {
       return new Response(null, response);
     },
     token: async () => {
+      let payload: unknown;
+
+      if (req.headers.get("content-type")?.includes("application/json")) {
+        payload = await req.json();
+      }
+      if (
+        req.headers.get("content-type")?.includes("multipart/form-data")
+      ) {
+        payload = Object.fromEntries((await req.formData()).entries());
+      }
+
+      if (!payload) {
+        return Response.json("Content type not acceptable", {
+          status: STATUS_CODE.UnsupportedMediaType,
+        });
+      }
+
+      const payloadHeaders = new Headers(req.headers);
+      payloadHeaders.set(
+        "content-type",
+        "application/x-www-form-urlencoded",
+      );
+
       const query = Object.fromEntries(ctx.url.searchParams.entries());
       const request = new OAuth2Server.Request({
         query,
         method: req.method,
-        headers: Object.fromEntries(req.headers.entries()),
-        body: Object.fromEntries((await req.formData()).entries()),
+        headers: Object.fromEntries(payloadHeaders.entries()),
+        body: payload,
       });
       const response = new OAuth2Server.Response();
 
@@ -297,6 +341,24 @@ export const getOAuthServer = (req: Request, ctx: { url: URL }) => {
       const { headers, status, body } = response;
 
       return Response.json(body, {
+        headers,
+        status,
+      });
+    },
+    authenticate: async () => {
+      const query = Object.fromEntries(ctx.url.searchParams.entries());
+      const request = new OAuth2Server.Request({
+        query,
+        method: req.method,
+        headers: Object.fromEntries(req.headers.entries()),
+      });
+
+      const response = new OAuth2Server.Response();
+      const code = await oauthServer.authenticate(request, response);
+
+      const { headers, status } = response;
+
+      return Response.json(code, {
         headers,
         status,
       });

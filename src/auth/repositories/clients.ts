@@ -64,3 +64,27 @@ export const getAppClientUris = (
         clientSecret ? eq(applications.client_secret, clientSecret) : undefined,
       ),
     );
+
+export const getAppInfo = async (clientId: string) => {
+  const response = await db.select({
+    name: applications.name,
+    website: applications.website,
+    scopes: scopes.scope,
+    redirect_uris: redirectUris.uri,
+  }).from(applications)
+    .leftJoin(scopes, eq(applications.id, scopes.applicationId))
+    .leftJoin(redirectUris, eq(applications.id, redirectUris.applicationId))
+    .where(eq(applications.client_id, clientId));
+
+  return response.reduce((prev, curr) => ({
+    ...prev,
+    scopes: curr.scopes ? [...prev.scopes, ...curr.scopes] : prev.scopes,
+    redirect_uris: curr.redirect_uris
+      ? [...prev.redirect_uris, ...curr.redirect_uris]
+      : prev.redirect_uris,
+  }), {
+    ...response.at(0)!,
+    scopes: [] as string[],
+    redirect_uris: [] as string[],
+  });
+};
