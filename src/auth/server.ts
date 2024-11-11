@@ -3,7 +3,6 @@ import crypto from "node:crypto";
 import OAuth2Server from "oauth2-server";
 import { getAppClientUris } from "./repositories/clients.ts";
 import { getToken, saveToken } from "./repositories/tokens.ts";
-import { STATUS_CODE } from "$fresh/server.ts";
 
 const log = console.log;
 
@@ -43,13 +42,6 @@ const model = {
     });
 
     const client = await getAppClientUris(clientId, clientSecret);
-
-    // mock.client = {
-    //     clientId: clientId,
-    //     clientSecret: clientSecret!,
-    //     grants: ["authorization_code", "refresh_token"],
-    //     redirectUris: client.map((uri) => uri.redirect_uris!),
-    // };
 
     const uris = client.map((uri) => uri.redirect_uris!);
 
@@ -168,24 +160,6 @@ const model = {
     user: OAuth2Server.User,
     _scope: unknown,
   ) => {
-    /*
-        For this to work, you are going have to hack this a little bit:
-        1. navigate to the node_modules folder
-        2. find the oauth_server folder. (node_modules/express-oauth-server/node_modules/oauth2-server)
-        3. open lib/handlers/authorize-handler.js
-        4. Make the following change (around line 136):
-
-        AuthorizeHandler.prototype.generateAuthorizationCode = function (client, user, scope) {
-          if (this.model.generateAuthorizationCode) {
-            // Replace this
-            //return promisify(this.model.generateAuthorizationCode).call(this.model, client, user, scope);
-            // With this
-            return this.model.generateAuthorizationCode(client, user, scope)
-          }
-          return tokenUtil.generateRandomToken();
-        };
-        */
-
     log({
       title: "Generate Authorization Code",
       parameters: [
@@ -317,10 +291,11 @@ export const getOAuthServer = (req: Request, ctx: { url: URL }) => {
 
       if (!payload) {
         return Response.json("Content type not acceptable", {
-          status: STATUS_CODE.UnsupportedMediaType,
+          status: 415,
         });
       }
 
+      // Node-OAuth2-Server only accepts this content-type
       const payloadHeaders = new Headers(req.headers);
       payloadHeaders.set(
         "content-type",
