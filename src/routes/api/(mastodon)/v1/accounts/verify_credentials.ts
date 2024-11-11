@@ -1,9 +1,10 @@
-import { Handlers, STATUS_CODE } from "$fresh/server.ts";
+import { STATUS_CODE } from "@std/http";
 import { getOAuthServer } from "../../../../../auth/server.ts";
 import { getAppInfo } from "../../../../../auth/repositories/clients.ts";
+import { define } from "../../../../../utils.ts";
 
-export const handler: Handlers = {
-  GET: async (req, ctx) => {
+export const handler = define.handlers({
+  GET: async ({ req, ...ctx }) => {
     const authentication = await getOAuthServer(req, ctx).authenticate();
 
     if (authentication.status !== STATUS_CODE.OK) {
@@ -14,4 +15,4 @@ export const handler: Handlers = {
     const appInfo = await getAppInfo(body.client.client_id);
     return Response.json(appInfo);
   },
-};
+});

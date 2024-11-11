@@ -1,6 +1,6 @@
-import { Handlers } from "$fresh/server.ts";
 import { getOAuthServer } from "../../auth/server.ts";
+import { define } from "../../utils.ts";
 
-export const handler: Handlers = {
-  POST: (req, ctx) => getOAuthServer(req, ctx).token(),
-};
+export const handler = define.handlers({
+  POST: ({ req, ...ctx }) => getOAuthServer(req, ctx).token(),
+});

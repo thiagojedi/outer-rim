@@ -1,6 +1,6 @@
 import { Auth } from "@auth/core";
 import { OAuth2Config, TokenEndpointHandler } from "@auth/core/providers";
-import { Handler } from "$fresh/server.ts";
+import { define } from "../../utils.ts";
 
 const options = {
   clientId: "qCwcuNuk5d3lYG3co5WuBddFYYOk-RXBg2bAlNaXH3w",
@@ -68,10 +68,10 @@ const CustomProvider: OAuth2Config<
   options,
 };
 
-export const handler: Handler = (req) => {
+export const handler = define.handlers(({ req }) => {
   return Auth(req, {
     trustHost: true,
     secret: "test_secret", // change this
     providers: [CustomProvider],
   });
-};
+});

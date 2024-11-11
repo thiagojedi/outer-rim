@@ -1,7 +1,9 @@
-import { Handlers, STATUS_CODE } from "$fresh/server.ts";
+import { STATUS_CODE } from "@std/http";
+
 import { z } from "zod";
 import { createClientApp } from "../../../../auth/repositories/clients.ts";
 import { getLogger } from "@logtape/logtape";
+import { define } from "../../../../utils.ts";
 
 const appPayloadSchema = z.object({
   client_name: z.string(),
@@ -12,8 +14,8 @@ const appPayloadSchema = z.object({
 
 const logger = getLogger("fresh");
 
-export const handler: Handlers = {
-  POST: async (req, _ctx) => {
+export const handler = define.handlers({
+  POST: async ({ req }) => {
     const body = await req.json();
 
     if (typeof body.redirect_uris === "string") {
@@ -35,4 +37,4 @@ export const handler: Handlers = {
 
     return Response.json(createdApp, { status: STATUS_CODE.OK });
   },
-};
+});

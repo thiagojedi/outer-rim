@@ -1,4 +1,4 @@
-import "$std/dotenv/load.ts";
+import "@std/dotenv/load";
 import { drizzle } from "drizzle-orm/libsql/node";
 import * as schema from "./models.ts";
 
