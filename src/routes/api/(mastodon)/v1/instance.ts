@@ -1,6 +1,6 @@
-import { Handlers } from "fresh";
+import { define } from "../../../../utils.ts";
 
-export const handler: Handlers = {
+export const handler = define.handlers({
   GET: () => {
     return Response.json({
       "version": "0.0.1",
@@ -18,4 +18,4 @@ export const handler: Handlers = {
       },
     });
   },
-};
+});

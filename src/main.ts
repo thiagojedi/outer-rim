@@ -6,9 +6,30 @@
 
 import { App, fsRoutes, staticFiles } from "fresh";
 import { type State } from "./utils.ts";
+import { STATUS_CODE } from "@std/http/status";
+import { getLogger } from "@logtape/logtape";
 
 export const app = new App<State>();
 app.use(staticFiles());
+
+const log = getLogger(["outer-ring"]);
+app.use(
+  ({ req, ...ctx }) => {
+    log.warn`${req.method} ${req.url}`;
+    return ctx.next();
+  },
+);
+
+app.use(
+  ({ req, next }) => {
+    if (req.method === "BREW") {
+      return Response.json({
+        "error": "I'm a teapot",
+      }, { status: STATUS_CODE.Teapot });
+    }
+    return next();
+  },
+);
 
 await fsRoutes(app, {
   dir: "./src/",

@@ -2,7 +2,6 @@ import { STATUS_CODE } from "@std/http";
 
 import { z } from "zod";
 import { createClientApp } from "../../../../auth/repositories/clients.ts";
-import { getLogger } from "@logtape/logtape";
 import { define } from "../../../../utils.ts";
 
 const appPayloadSchema = z.object({
@@ -11,8 +10,6 @@ const appPayloadSchema = z.object({
   scopes: z.string(),
   website: z.string().url(),
 });
-
-const logger = getLogger("fresh");
 
 export const handler = define.handlers({
   POST: async ({ req }) => {
@@ -24,8 +21,6 @@ export const handler = define.handlers({
 
     const { data, success, error } = appPayloadSchema
       .safeParse(await body);
-
-    logger.error`Error parsing: ${error}`;
 
     if (!success) {
       return Response.json(error.issues, {
