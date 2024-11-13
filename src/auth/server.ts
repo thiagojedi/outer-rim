@@ -3,6 +3,9 @@ import crypto from "node:crypto";
 import OAuth2Server from "oauth2-server";
 import { getAppClientUris } from "./repositories/clients.ts";
 import { getToken, saveToken } from "./repositories/tokens.ts";
+import { FreshContext } from "fresh";
+import { STATUS_CODE } from "@std/http";
+import { parseMediaType } from "jsr:@std/media-types";
 
 const log = console.log;
 
@@ -247,96 +250,110 @@ const model = {
   },
 };
 
-const oauthServer = new OAuth2Server({
-  model,
-  // grants: ["authorization_code", "refresh_token"],
-  accessTokenLifetime: 60 * 60 * 24, // 24 hours, or 1 day
-  allowEmptyState: true,
-  allowExtendedTokenAttributes: true,
-});
+async function getRequest(ctx: FreshContext) {
+  const query = Object.fromEntries(ctx.url.searchParams.entries());
+  const method = ctx.req.method;
+  const headers = new Headers(ctx.req.headers);
 
-export const getOAuthServer = (req: Request, ctx: { url: URL }) => {
+  let body: unknown;
+  const content = headers.get("content-type");
+  if (content) {
+    const [mediaType] = parseMediaType(content);
+    switch (mediaType) {
+      case "application/json":
+        body = await ctx.req.json();
+        break;
+      case "multipart/form-data":
+        body = await ctx.req.formData();
+        break;
+      case "application/x-www-form-urlencoded":
+        // Correct content-type
+        body = ctx.req.body;
+        break;
+      default:
+        throw new Error("not supported media type");
+    }
+
+    headers.set(
+      "content-type",
+      "application/x-www-form-urlencoded",
+    );
+  }
+
+  return new OAuth2Server.Request({
+    headers: Object.fromEntries(headers.entries()),
+    method,
+    query,
+    body,
+  });
+}
+
+function toResponse({ body, ...res }: OAuth2Server.Response) {
+  return Response.json(body, res);
+}
+
+const getAuthServer = <T extends { token?: OAuth2Server.Token }>(
+  options: OAuth2Server.ServerOptions,
+) => {
+  const server = new OAuth2Server(options);
   return {
-    authorize: async (user: unknown) => {
-      const query = Object.fromEntries(ctx.url.searchParams.entries());
-      const request = new OAuth2Server.Request({
-        query,
-        method: req.method,
-        headers: req.headers,
-        body: { user },
-      });
-      const response = new OAuth2Server.Response();
-      await oauthServer.authorize(
-        request,
-        response,
-        {
-          authenticateHandler: {
-            handle: (req: OAuth2Server.Request) => req.body.user,
-          },
-        },
-      );
-      return new Response(null, response);
-    },
-    token: async () => {
-      let payload: unknown;
-
-      if (req.headers.get("content-type")?.includes("application/json")) {
-        payload = await req.json();
-      }
-      if (
-        req.headers.get("content-type")?.includes("multipart/form-data")
-      ) {
-        payload = Object.fromEntries((await req.formData()).entries());
-      }
-
-      if (!payload) {
-        return Response.json("Content type not acceptable", {
-          status: 415,
+    async token(
+      ctx: FreshContext<T>,
+      options?: OAuth2Server.TokenOptions,
+    ) {
+      try {
+        const req = await getRequest(ctx);
+        const res = new OAuth2Server.Response();
+        await server.token(req, res, options);
+        return toResponse(res);
+      } catch (e) {
+        if (
+          (e as Error).message ===
+            "not supported media type"
+        ) {
+          return Response.json(e, {
+            status: STATUS_CODE.NotAcceptable,
+          });
+        }
+        console.error(e);
+        return Response.json(e, {
+          status: STATUS_CODE.InternalServerError,
         });
       }
-
-      // Node-OAuth2-Server only accepts this content-type
-      const payloadHeaders = new Headers(req.headers);
-      payloadHeaders.set(
-        "content-type",
-        "application/x-www-form-urlencoded",
-      );
-
-      const query = Object.fromEntries(ctx.url.searchParams.entries());
-      const request = new OAuth2Server.Request({
-        query,
-        method: req.method,
-        headers: Object.fromEntries(payloadHeaders.entries()),
-        body: payload,
-      });
-      const response = new OAuth2Server.Response();
-
-      await oauthServer.token(request, response);
-
-      const { headers, status, body } = response;
-
-      return Response.json(body, {
-        headers,
-        status,
-      });
     },
-    authenticate: async () => {
-      const query = Object.fromEntries(ctx.url.searchParams.entries());
-      const request = new OAuth2Server.Request({
-        query,
-        method: req.method,
-        headers: Object.fromEntries(req.headers.entries()),
+
+    async authorize(
+      ctx: FreshContext<T>,
+      options?: OAuth2Server.AuthorizeOptions,
+    ) {
+      const req = await getRequest(ctx);
+      const res = new OAuth2Server.Response();
+      await server.authorize(req, res, {
+        authenticateHandler: {
+          handle: () => ({ user: { id: 1 } }),
+        },
+        ...options,
       });
+      return toResponse(res);
+    },
 
-      const response = new OAuth2Server.Response();
-      const code = await oauthServer.authenticate(request, response);
+    async authenticate(
+      ctx: FreshContext<T>,
+      options?: OAuth2Server.AuthenticateOptions,
+    ) {
+      const req = await getRequest(ctx);
+      const res = new OAuth2Server.Response();
+      const token = await server.authenticate(req, res, options);
 
-      const { headers, status } = response;
-
-      return Response.json(code, {
-        headers,
-        status,
-      });
+      if (res.status !== STATUS_CODE.OK) {
+        return toResponse(res);
+      }
+      ctx.state.token = token;
+      return ctx.next();
     },
   };
 };
+
+export const authServer = getAuthServer({ model, allowEmptyState: true });
+
+export type Token = OAuth2Server.Token;

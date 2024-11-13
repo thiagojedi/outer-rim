@@ -1,8 +1,11 @@
 import { createDefine } from "fresh";
 
+import { Token } from "./auth/server.ts";
+
 import "./logging.ts";
 
-// deno-lint-ignore no-empty-interface
-export interface State {}
+export interface State {
+  token: Token;
+}
 
 export const define = createDefine<State>();
