@@ -1,11 +1,13 @@
 import crypto from "node:crypto";
 // @ts-types="npm:@types/oauth2-server"
 import OAuth2Server from "oauth2-server";
-import { getAppClientUris } from "./repositories/clients.ts";
-import { getToken, saveToken } from "./repositories/tokens.ts";
 import { FreshContext } from "fresh";
 import { STATUS_CODE } from "@std/http";
-import { parseMediaType } from "jsr:@std/media-types";
+import { parseMediaType } from "jsr:@std/media-types    ";
+
+import { getAppClientUris } from "./repositories/clients.ts";
+import { getToken, saveToken } from "./repositories/tokens.ts";
+import { toOathToken } from "./repositories/utils.ts";
 
 const log = console.log;
 
@@ -71,70 +73,24 @@ const model = {
     client: OAuth2Server.Client,
     user: OAuth2Server.User,
   ) => {
-    /* This is where you insert the token into the database */
-    log({
-      title: "Save Token",
-      parameters: [
-        { name: "token", value: token },
-        { name: "client", value: client },
-        { name: "user", value: user },
-      ],
-    });
-
     const savedToken = await saveToken(
       token as Required<typeof token>,
       client.clientId,
       user.user.id,
     );
 
-    const accessTokenExpiresAt = new Date(
-      Date.parse(savedToken!.accessTokenExpiresAt),
-    );
-    const refreshTokenExpiresAt = savedToken?.refreshTokenExpiresAt
-      ? new Date(Date.parse(savedToken.refreshTokenExpiresAt))
-      : undefined;
-
-    return savedToken && {
-      ...savedToken,
-      refreshToken: savedToken.refreshToken ?? undefined,
-      accessTokenExpiresAt,
-      refreshTokenExpiresAt,
-      client,
-      user,
-    };
+    return savedToken && { ...(toOathToken(savedToken)), client, user };
   },
+  /* This is where you select the token from the database where the code matches */
   getAccessToken: async (accessToken: string) => {
-    /* This is where you select the token from the database where the code matches */
     log({
       title: "Get Access Token",
       parameters: [
         { name: "token", value: accessToken },
       ],
     });
-    const response = await getToken(accessToken);
-
-    if (!response) {
-      return false;
-    }
-
-    const { auth_tokens: token, users: user, applications: client } = response;
-
-    return {
-      ...token,
-      refreshToken: token.refreshToken ?? undefined,
-      accessTokenExpiresAt: new Date(
-        Date.parse(token.accessTokenExpiresAt),
-      ),
-      refreshTokenExpiresAt: token.refreshTokenExpiresAt
-        ? new Date(Date.parse(token.refreshTokenExpiresAt))
-        : undefined,
-      client: {
-        ...client!,
-        id: client!.id.toString(),
-        grants: ["authorization_code", "refresh_token"],
-      },
-      user: user!,
-    };
+    const token = await getToken(accessToken);
+    return token && toOathToken(token);
   },
   getRefreshToken: (token: unknown) => {
     /* Retrieves the token from the database */

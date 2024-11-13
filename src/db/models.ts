@@ -1,5 +1,5 @@
 import { int, sqliteTable as table, text } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 const timestamps = {
   updatedAt: text(),
@@ -50,3 +50,11 @@ export const tokens = table("auth_tokens", {
     onUpdate: "cascade",
   }),
 });
+
+export const tokenRelations = relations(tokens, ({ one }) => ({
+  client: one(applications, {
+    fields: [tokens.clientId],
+    references: [applications.id],
+  }),
+  user: one(users, { fields: [tokens.userId], references: [users.id] }),
+}));
