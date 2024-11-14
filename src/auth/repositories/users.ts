@@ -9,17 +9,16 @@ export const createUser = (username: string, password: string) => {
   });
 };
 
-export function getUserByCredentials(
+export const getUserByCredentials = (
   identifier: string,
   password?: string,
   _grantType?: GrantIdentifier,
   _client?: OAuthClient,
-): Promise<OAuthUser | undefined> {
-  return db.query.users.findFirst({
+): Promise<OAuthUser | undefined> =>
+  db.query.users.findFirst({
     where: (users, { eq, and }) =>
       and(
-        eq(users.username, identifier),
-        eq(users.password, password),
+        eq(users.id, Number(identifier)),
+        password ? eq(users.password, password) : undefined,
       ),
   });
-}

@@ -1,6 +1,6 @@
 import { FreshContext } from "fresh";
 
-import { AuthorizationServer, OAuthUser } from "@jmondi/oauth2-server";
+import { AuthorizationServer } from "@jmondi/oauth2-server";
 import {
   requestFromVanilla,
   responseToVanilla,
@@ -17,6 +17,9 @@ const server = new AuthorizationServer(
   tokenRepository,
   scopeRepository,
   "very-secret-key",
+  {
+    requiresPKCE: false,
+  },
 );
 server.enableGrantType({
   grant: "authorization_code",
@@ -24,11 +27,10 @@ server.enableGrantType({
   authCodeRepository,
 });
 
-const getAuthServer = <T extends { user: OAuthUser }>() => {
+const getAuthServer = <T>() => {
   return {
     token: async (ctx: FreshContext<T>) => {
       try {
-        console.log(ctx.req);
         const req_1 = await requestFromVanilla(ctx.req);
         const oauthResponse = await server.respondToAccessTokenRequest(
           req_1,
@@ -40,11 +42,12 @@ const getAuthServer = <T extends { user: OAuthUser }>() => {
     },
 
     authorize: async (ctx: FreshContext<T>) => {
+      const req = await requestFromVanilla(ctx.req);
       const authRequest = await server.validateAuthorizationRequest(
-        await requestFromVanilla(ctx.req),
+        req,
       );
 
-      authRequest.user = ctx.state.user;
+      authRequest.user = { id: 1 };
       authRequest.isAuthorizationApproved = true;
 
       const oauthResponse = await server.completeAuthorizationRequest(

@@ -23,13 +23,19 @@ export const handler = define.handlers({
       .safeParse(await body);
 
     if (!success) {
+      console.error(error);
       return Response.json(error.issues, {
         status: STATUS_CODE.BadRequest,
       });
     }
 
-    const createdApp = await createClientApp(data);
+    try {
+      const createdApp = await createClientApp(data);
 
-    return Response.json(createdApp, { status: STATUS_CODE.OK });
+      return Response.json(createdApp, { status: STATUS_CODE.OK });
+    } catch (e) {
+      console.error(e);
+      return Response.json(e, { status: STATUS_CODE.InternalServerError });
+    }
   },
 });

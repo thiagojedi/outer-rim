@@ -13,12 +13,12 @@ import { generateRandomId } from "../../db/utils.ts";
 import dayjs from "dayjs";
 import { getByIdentifier } from "./clients.ts";
 
-export function issueToken(
+export const issueToken = (
   client: OAuthClient,
   scopes: OAuthScope[],
   user?: OAuthUser,
-) {
-  return Promise.resolve(
+) =>
+  Promise.resolve(
     {
       accessToken: generateRandomId(),
       accessTokenExpiresAt: dayjs().add(1, "day").toDate(),
@@ -31,7 +31,6 @@ export function issueToken(
       scopes,
     },
   );
-}
 
 export const persist = async (
   { accessTokenExpiresAt, refreshTokenExpiresAt, client, user, ...token }:

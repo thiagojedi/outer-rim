@@ -12,6 +12,11 @@ type ClientAppPayload = {
   website: string;
 };
 
+const allowedGrants: GrantIdentifier[] = [
+  "authorization_code",
+  "client_credentials",
+];
+
 export const createClientApp = (payload: ClientAppPayload): Promise<{
   "id": string;
   "name": string;
@@ -78,15 +83,9 @@ export const getByIdentifier = async (clientId: string, driver = db) => {
     ...response.at(0)!,
     redirectUris: Array.from(new Set(response.map((r) => r.redirectUri))),
     scopes: response.map((r) => ({ name: r.scope })),
-    allowedGrants: [
-      "authorization_code",
-      "client_credentials",
-    ] as GrantIdentifier[],
+    allowedGrants,
   };
 };
 
-export const isClientValid = (
-  _grantType: GrantIdentifier,
-  _client: object,
-  _clientSecret?: string,
-) => Promise.resolve(true);
+export const isClientValid = (grantType: GrantIdentifier) =>
+  Promise.resolve(allowedGrants.includes(grantType));
