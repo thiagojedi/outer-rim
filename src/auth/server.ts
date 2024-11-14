@@ -12,6 +12,8 @@ import * as scopeRepository from "./repositories/scopes.ts";
 import * as userRepository from "./repositories/users.ts";
 import * as authCodeRepository from "./repositories/authCodes.ts";
 
+import type { SessionState } from "./session.ts";
+
 const oauthServer = new AuthorizationServer(
   clientRepository,
   tokenRepository,
@@ -28,15 +30,15 @@ oauthServer.enableGrantType({
 });
 
 const getOAuthServer = <
-  T extends { session: { auth: boolean; userId: number } },
+  T extends SessionState,
 >() => {
   return {
     token: async (ctx: FreshContext<T>) => {
       try {
-        const req_1 = await requestFromVanilla(ctx.req);
-        const oauthResponse = await oauthServer.respondToAccessTokenRequest(
-          req_1,
-        );
+        const oauthResponse = await oauthServer
+          .respondToAccessTokenRequest(
+            await requestFromVanilla(ctx.req),
+          );
         return responseToVanilla(oauthResponse);
       } catch (e) {
         return Response.json(e, { status: 400 });
@@ -50,16 +52,19 @@ const getOAuthServer = <
 
       if (!ctx.state.session.auth) {
         return Response.redirect(
-          `/login?${new URLSearchParams({ redirect: ctx.url.toString() })}`,
+          `/login?${new URLSearchParams({
+            redirect: ctx.url.toString(),
+          })}`,
         );
       }
 
       authRequest.user = { id: ctx.state.session.userId! };
       authRequest.isAuthorizationApproved = true;
 
-      const oauthResponse = await oauthServer.completeAuthorizationRequest(
-        authRequest,
-      );
+      const oauthResponse = await oauthServer
+        .completeAuthorizationRequest(
+          authRequest,
+        );
 
       return responseToVanilla(oauthResponse);
     },

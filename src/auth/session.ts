@@ -6,18 +6,21 @@ import duration from "dayjs/plugin/duration.js";
 
 dayjs.extend(duration);
 
-export type SessionState = { session: { auth: boolean; userId: number } };
+export type SessionConfig = { cookieName?: string };
+
+export type SessionState = {
+  session: { auth: true; userId: number } | { auth: false; userId: null };
+};
 
 export const sessionMiddleware =
-  ({ cookieName = "station" }: { cookieName?: string } = {}) =>
+  ({ cookieName = "station" }: SessionConfig = {}) =>
   async (
     ctx: FreshContext<SessionState>,
   ) => {
     const cookies = getCookies(ctx.req.headers);
 
-    // TODO Hash this
     const sessionCookie = cookies.station
-      ? JSON.parse(decodeURIComponent(cookies[cookieName]))
+      ? JSON.parse(atob(cookies[cookieName]))
       : { auth: false, userId: -1 };
     ctx.state.session = { ...sessionCookie };
 
@@ -27,10 +30,7 @@ export const sessionMiddleware =
       if (ctx.state.session.auth) {
         setCookie(response.headers, {
           name: cookieName,
-          // TODO Hash this
-          value: encodeURIComponent(
-            JSON.stringify(ctx.state.session),
-          ),
+          value: btoa(JSON.stringify(ctx.state.session)),
           maxAge: dayjs.duration({ minutes: 5 }).asSeconds(),
           sameSite: "Lax", // this is important to prevent CSRF attacks
           domain: ctx.url.hostname,
