@@ -12,7 +12,7 @@ import * as scopeRepository from "./repositories/scopes.ts";
 import * as userRepository from "./repositories/users.ts";
 import * as authCodeRepository from "./repositories/authCodes.ts";
 
-const server = new AuthorizationServer(
+const oauthServer = new AuthorizationServer(
   clientRepository,
   tokenRepository,
   scopeRepository,
@@ -21,18 +21,20 @@ const server = new AuthorizationServer(
     requiresPKCE: false,
   },
 );
-server.enableGrantType({
+oauthServer.enableGrantType({
   grant: "authorization_code",
   userRepository,
   authCodeRepository,
 });
 
-const getAuthServer = <T>() => {
+const getOAuthServer = <
+  T extends { session: { auth: boolean; userId: number } },
+>() => {
   return {
     token: async (ctx: FreshContext<T>) => {
       try {
         const req_1 = await requestFromVanilla(ctx.req);
-        const oauthResponse = await server.respondToAccessTokenRequest(
+        const oauthResponse = await oauthServer.respondToAccessTokenRequest(
           req_1,
         );
         return responseToVanilla(oauthResponse);
@@ -42,15 +44,20 @@ const getAuthServer = <T>() => {
     },
 
     authorize: async (ctx: FreshContext<T>) => {
-      const req = await requestFromVanilla(ctx.req);
-      const authRequest = await server.validateAuthorizationRequest(
-        req,
+      const authRequest = await oauthServer.validateAuthorizationRequest(
+        await requestFromVanilla(ctx.req),
       );
 
-      authRequest.user = { id: 1 };
+      if (!ctx.state.session.auth) {
+        return Response.redirect(
+          `/login?${new URLSearchParams({ redirect: ctx.url.toString() })}`,
+        );
+      }
+
+      authRequest.user = { id: ctx.state.session.userId! };
       authRequest.isAuthorizationApproved = true;
 
-      const oauthResponse = await server.completeAuthorizationRequest(
+      const oauthResponse = await oauthServer.completeAuthorizationRequest(
         authRequest,
       );
 
@@ -59,4 +66,4 @@ const getAuthServer = <T>() => {
   };
 };
 
-export const authServer = getAuthServer();
+export const authServer = getOAuthServer();

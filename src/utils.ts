@@ -1,8 +1,8 @@
 import { createDefine } from "fresh";
 
 import "./logging.ts";
+import { SessionState } from "./auth/session.ts";
 
-// deno-lint-ignore no-empty-interface
-export interface State {}
+export interface State extends SessionState {}
 
 export const define = createDefine<State>();
