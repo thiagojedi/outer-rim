@@ -16,11 +16,13 @@
   "imports": {
     "@auth/core": "npm:@auth/core@^0.37.3",
     "@fedify/fedify": "jsr:@fedify/fedify@^1.2.3",
+    "@jmondi/oauth2-server": "jsr:@jmondi/oauth2-server@^4.0.2",
     "@libsql/client": "npm:@libsql/client@^0.14.0",
     "@logtape/logtape": "jsr:@logtape/logtape@^0.7.1",
     "@preact/signals": "npm:@preact/signals@^1.3.0",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.2",
     "@std/http": "jsr:@std/http@^1.0.9",
+    "dayjs": "npm:dayjs@^1.11.13",
     "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-orm": "npm:drizzle-orm@^0.36.1",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.25",

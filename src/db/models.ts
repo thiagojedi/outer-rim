@@ -1,35 +1,26 @@
 import { int, sqliteTable as table, text } from "drizzle-orm/sqlite-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 
-const timestamps = {
-  updatedAt: text(),
-  createdAt: text().notNull().default(sql`(CURRENT_TIMESTAMP)`),
-  deletedAt: text(),
-};
-
-export const applications = table("applications", {
-  id: int().primaryKey({ autoIncrement: true }),
+export const authClients = table("applications", {
+  id: text().primaryKey(),
   name: text().notNull(),
+  secret: text().notNull(),
   website: text(),
-  client_id: text().notNull().unique(),
-  client_secret: text().notNull(),
-  ...timestamps,
 });
 
 export const scopes = table("scopes", {
-  applicationId: int().notNull().references(() => applications.id, {
+  name: text().notNull(),
+  clientId: text().notNull().references(() => authClients.id, {
     onDelete: "cascade",
   }),
-  scope: text().notNull(),
 });
 
 export const redirectUris = table("redirect_uri", {
-  applicationId: int().notNull().references(() => applications.id, {
+  uri: text().notNull(),
+  clientId: text().notNull().references(() => authClients.id, {
     onDelete: "cascade",
   }),
-  uri: text().notNull(),
 });
-
 export const users = table("users", {
   id: int().primaryKey({ autoIncrement: true }),
   username: text().notNull().unique(),
@@ -39,9 +30,37 @@ export const users = table("users", {
 export const tokens = table("auth_tokens", {
   accessToken: text().notNull(),
   accessTokenExpiresAt: text().notNull(),
-  refreshToken: text(), // NOTE this is only needed if you need refresh tokens down the line
+  refreshToken: text(),
   refreshTokenExpiresAt: text(),
-  clientId: int().notNull().references(() => applications.client_id, {
+
+  originatingAuthCodeId: text(),
+
+  clientId: text().notNull().references(() => authClients.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+  userId: int().references(() => users.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+});
+
+export const tokenRelations = relations(tokens, ({ one }) => ({
+  client: one(authClients, {
+    fields: [tokens.clientId],
+    references: [authClients.id],
+  }),
+  user: one(users, { fields: [tokens.userId], references: [users.id] }),
+}));
+
+export const authCodes = table("authorization_codes", {
+  code: text().notNull(),
+  redirectUri: text(),
+  codeChallenge: text(),
+  codeChallengeMethod: text(),
+  expiresAt: text(),
+
+  clientId: text().notNull().references(() => authClients.id, {
     onDelete: "cascade",
     onUpdate: "cascade",
   }),
@@ -51,10 +70,10 @@ export const tokens = table("auth_tokens", {
   }),
 });
 
-export const tokenRelations = relations(tokens, ({ one }) => ({
-  client: one(applications, {
-    fields: [tokens.clientId],
-    references: [applications.id],
+export const authCodeRelations = relations(authCodes, ({ one }) => ({
+  client: one(authClients, {
+    fields: [authCodes.clientId],
+    references: [authClients.id],
   }),
-  user: one(users, { fields: [tokens.userId], references: [users.id] }),
+  user: one(users, { fields: [authCodes.userId], references: [users.id] }),
 }));
