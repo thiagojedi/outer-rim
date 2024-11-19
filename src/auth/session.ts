@@ -1,11 +1,6 @@
 import { FreshContext } from "fresh";
 import { deleteCookie, getCookies, setCookie } from "@std/http/cookie";
 
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration.js";
-
-dayjs.extend(duration);
-
 export type SessionConfig = { cookieName?: string };
 
 export type SessionState = {
@@ -31,11 +26,12 @@ export const sessionMiddleware =
         setCookie(response.headers, {
           name: cookieName,
           value: btoa(JSON.stringify(ctx.state.session)),
-          maxAge: dayjs.duration({ minutes: 5 }).asSeconds(),
+          maxAge: 120,
           sameSite: "Lax", // this is important to prevent CSRF attacks
           domain: ctx.url.hostname,
           path: "/",
           secure: false,
+          httpOnly: true,
         });
       } else {
         deleteCookie(response.headers, cookieName);

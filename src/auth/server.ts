@@ -13,6 +13,7 @@ import * as userRepository from "./repositories/users.ts";
 import * as authCodeRepository from "./repositories/authCodes.ts";
 
 import type { SessionState } from "./session.ts";
+import { STATUS_CODE } from "@std/http";
 
 const oauthServer = new AuthorizationServer(
   clientRepository,
@@ -51,13 +52,13 @@ const getOAuthServer = <
       );
 
       if (!ctx.state.session.auth) {
-        return Response.redirect(
+        return ctx.redirect(
           `/login?${new URLSearchParams({
             redirect: ctx.url.toString(),
           })}`,
+          STATUS_CODE.TemporaryRedirect,
         );
       }
-
       authRequest.user = { id: ctx.state.session.userId! };
       authRequest.isAuthorizationApproved = true;
 

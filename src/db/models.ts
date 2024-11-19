@@ -1,5 +1,19 @@
-import { int, sqliteTable as table, text } from "drizzle-orm/sqlite-core";
+import {
+  customType,
+  int,
+  sqliteTable as table,
+  text,
+} from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
+
+const date = customType<{
+  data: Date;
+  driverData: string;
+}>({
+  dataType: () => "text",
+  toDriver: (value) => value.toISOString(),
+  fromDriver: (value) => new Date(Date.parse(value)),
+});
 
 export const authClients = table("applications", {
   id: text().primaryKey(),
@@ -29,9 +43,9 @@ export const users = table("users", {
 
 export const tokens = table("auth_tokens", {
   accessToken: text().notNull(),
-  accessTokenExpiresAt: text().notNull(),
+  accessTokenExpiresAt: date().notNull(),
   refreshToken: text(),
-  refreshTokenExpiresAt: text(),
+  refreshTokenExpiresAt: date(),
 
   originatingAuthCodeId: text(),
 
@@ -58,7 +72,7 @@ export const authCodes = table("authorization_codes", {
   redirectUri: text(),
   codeChallenge: text(),
   codeChallengeMethod: text(),
-  expiresAt: text(),
+  expiresAt: date().notNull(),
 
   clientId: text().notNull().references(() => authClients.id, {
     onDelete: "cascade",

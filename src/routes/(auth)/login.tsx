@@ -1,7 +1,8 @@
+import { STATUS_CODE } from "@std/http";
+import { FreshContext, page } from "fresh";
+
 import { define } from "../../utils.ts";
-import { db } from "../../db/client.ts";
-import { setCookie, STATUS_CODE } from "@std/http";
-import { page } from "fresh";
+import { getUserByUsername } from "../../auth/repositories/users.ts";
 
 /**
  * Redirects users back to required page if exists
@@ -9,10 +10,7 @@ import { page } from "fresh";
  */
 const authSuccess = (context: FreshContext) => {
   const redirect = context.url.searchParams.get("redirect");
-  return new Response(null, {
-    status: STATUS_CODE.Found,
-    headers: { Location: redirect ?? "/settings" },
-  });
+  return context.redirect(redirect ?? "/settings");
 };
 
 export const handler = define.handlers({

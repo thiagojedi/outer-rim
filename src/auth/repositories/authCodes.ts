@@ -1,9 +1,9 @@
-import dayjs from "dayjs";
-import type {
-  OAuthAuthCode,
-  OAuthClient,
-  OAuthScope,
-  OAuthUser,
+import {
+  DateInterval,
+  type OAuthAuthCode,
+  type OAuthClient,
+  type OAuthScope,
+  type OAuthUser,
 } from "@jmondi/oauth2-server";
 import { eq } from "drizzle-orm";
 
@@ -20,13 +20,12 @@ export const getByIdentifier = async (
     where: (authCodes, { eq }) => eq(authCodes.code, authCodeCode),
   }))!;
 
-  const client = await getClient(authCode!.clientId, driver);
+  const client = await getClient(authCode.clientId, driver);
   return {
     ...authCode,
     codeChallengeMethod: "plain",
     client,
     scopes: client.scopes,
-    expiresAt: dayjs(authCode.expiresAt).toDate(),
   };
 };
 
@@ -39,7 +38,7 @@ export const issueAuthCode = (
   code: generateRandomId(),
   codeChallenge: null,
   codeChallengeMethod: "S256",
-  expiresAt: dayjs().add(15, "minutes").toDate(),
+  expiresAt: new DateInterval("15m").getEndDate(),
   client,
   user,
   scopes,
@@ -50,23 +49,16 @@ export const persist = async (authCode: OAuthAuthCode, driver = db) => {
     ...authCode,
     clientId: authCode.client.id,
     userId: Number(authCode.user!.id),
-    expiresAt: dayjs(authCode.expiresAt).toISOString(),
   });
 };
 
 export const isRevoked = async (authCode: string, driver = db) => {
-  const persisted = await driver.query.authCodes.findFirst({
-    columns: { expiresAt: true },
-    where: (authCodes, { eq }) => eq(authCodes.code, authCode),
-  });
-  if (!persisted) {
-    return true;
-  }
-  return dayjs().isAfter(dayjs(persisted.expiresAt));
+  const auth = await getByIdentifier(authCode, driver);
+  return new Date() > auth.expiresAt;
 };
 
 export const revoke = async (authCode: string, driver = db) => {
   await driver.update(authCodes).set({
-    expiresAt: dayjs().toISOString(),
+    expiresAt: new Date(),
   }).where(eq(authCodes.code, authCode));
 };
