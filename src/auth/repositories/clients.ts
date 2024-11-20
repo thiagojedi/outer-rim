@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { GrantIdentifier } from "@jmondi/oauth2-server";
 
 import { db } from "../../db/client.ts";
 import { authClients, redirectUris, scopes } from "../../db/models.ts";
@@ -12,9 +11,9 @@ type ClientAppPayload = {
   website: string;
 };
 
-const allowedGrants: GrantIdentifier[] = [
+const allowedGrants = [
   "authorization_code",
-  "client_credentials",
+  "refresh_token",
 ];
 
 export const createClientApp = (payload: ClientAppPayload): Promise<{
@@ -83,9 +82,6 @@ export const getByIdentifier = async (clientId: string, driver = db) => {
     ...response.at(0)!,
     redirectUris: Array.from(new Set(response.map((r) => r.redirectUri))),
     scopes: response.map((r) => ({ name: r.scope })),
-    allowedGrants,
+    grants: allowedGrants,
   };
 };
-
-export const isClientValid = (grantType: GrantIdentifier) =>
-  Promise.resolve(allowedGrants.includes(grantType));

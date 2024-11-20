@@ -1,4 +1,3 @@
-import { GrantIdentifier, OAuthClient, OAuthUser } from "@jmondi/oauth2-server";
 import { compare, genSalt, hash } from "bcrypt";
 import { db } from "../../db/client.ts";
 import { users } from "../../db/models.ts";
@@ -18,10 +17,8 @@ export const createUser = async (
 export const getUserByCredentials = async (
   identifier: string,
   password?: string,
-  _grantType?: GrantIdentifier,
-  _client?: OAuthClient,
   driver = db,
-): Promise<OAuthUser | undefined> => {
+) => {
   const user = await driver.query.users.findFirst({
     where: (users, { eq }) => eq(users.id, Number(identifier)),
   });

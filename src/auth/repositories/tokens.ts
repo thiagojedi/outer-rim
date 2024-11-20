@@ -1,89 +1,44 @@
 import { eq } from "drizzle-orm";
-import {
-  DateInterval,
-  OAuthClient,
-  OAuthScope,
-  OAuthToken,
-  OAuthUser,
-} from "@jmondi/oauth2-server";
 
 import { db } from "../../db/client.ts";
 import { tokens } from "../../db/models.ts";
-import { generateRandomId } from "../../db/utils.ts";
-
-import { getByIdentifier } from "./clients.ts";
-
-export const issueToken = (
-  client: OAuthClient,
-  scopes: OAuthScope[],
-  user?: OAuthUser,
-) =>
-  Promise.resolve(
-    {
-      accessToken: generateRandomId(),
-      accessTokenExpiresAt: new DateInterval("2h").getEndDate(),
-      refreshToken: null,
-      refreshTokenExpiresAt: null,
-      client,
-      clientId: client.id,
-      user: user,
-      userId: user?.id ?? null,
-      scopes,
-    },
-  );
+import * as OAuth2Server from "npm:@types/oauth2-server@3.0.18";
 
 export const persist = async (
-  { client, user, ...token }: OAuthToken,
+  token: OAuth2Server.Token,
+  client: OAuth2Server.Client,
+  user: OAuth2Server.User,
   driver = db,
 ) => {
   await driver.insert(tokens).values({
-    ...token,
+    accessToken: token.accessToken,
+    accessTokenExpiresAt: token.accessTokenExpiresAt!,
+    refreshToken: token.refreshToken,
+    refreshTokenExpiresAt: token.refreshTokenExpiresAt,
     clientId: client.id,
-    userId: user && Number(user.id),
+    userId: user.id,
   });
 };
 
-export const revoke = async (token: OAuthToken, driver = db) => {
+export const revoke = async (accessToken: string, driver = db) => {
   await driver.update(tokens).set({
     accessTokenExpiresAt: new Date(),
     refreshTokenExpiresAt: new Date(),
-  }).where(eq(tokens.accessToken, token.accessToken));
+  }).where(eq(tokens.accessToken, accessToken));
 };
 
-export const isRefreshTokenRevoked = (token: OAuthToken) =>
-  Promise.resolve(Date.now() > (token.refreshTokenExpiresAt?.getTime() ?? 0));
+export const getByBearerToken = (accessToken: string, driver = db) =>
+  driver.query.tokens.findFirst({
+    where: (tokens, { eq }) => eq(tokens.accessToken, accessToken),
+  });
 
-export const issueRefreshToken = async (
-  token: OAuthToken,
-  _client: OAuthClient,
-  driver = db,
-) => {
-  token.refreshToken = generateRandomId();
-  token.refreshTokenExpiresAt = new DateInterval("2h").getEndDate();
-  await driver.update(tokens).set({
-    refreshToken: token.refreshToken,
-    refreshTokenExpiresAt: token.refreshTokenExpiresAt,
-  }).where(eq(tokens.accessToken, token.accessToken));
-  return token;
-};
-
-export const getByRefreshToken = async (
+export const getByRefreshToken = (
   refreshToken: string,
   driver = db,
-): Promise<OAuthToken> => {
-  const token = (await driver.query.tokens.findFirst({
-    where: (tokens, { eq }) =>
-      eq(
-        tokens.refreshToken,
-        refreshToken,
-      ),
-  }))!;
-  const client = await getByIdentifier(token.clientId, driver);
-
-  return {
-    ...token,
-    client,
-    scopes: client.scopes,
-    originatingAuthCodeId: token.originatingAuthCodeId ?? undefined,
-  };
-};
+) => (driver.query.tokens.findFirst({
+  where: (tokens, { eq }) =>
+    eq(
+      tokens.refreshToken,
+      refreshToken,
+    ),
+}));
