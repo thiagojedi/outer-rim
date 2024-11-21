@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../../db/client.ts";
 import { authCodes } from "../../db/models.ts";
-import * as OAuth2Server from "npm:@types/oauth2-server@3.0.18";
 
 export const getByIdentifier = async (
   authCodeCode: string,
@@ -19,14 +18,20 @@ export const getByIdentifier = async (
 };
 
 export const persist = async (
-  authCode: OAuth2Server.AuthorizationCode,
+  authCode: {
+    authorizationCode: string;
+    redirectUri: string;
+    expiresAt: Date;
+  },
+  client: { id: string },
+  user: { id: number },
   driver = db,
 ) => {
   await driver.insert(authCodes).values({
     ...authCode,
     code: authCode.authorizationCode,
-    clientId: authCode.client.id,
-    userId: authCode.user.id,
+    clientId: client.id,
+    userId: user.id,
   });
 };
 

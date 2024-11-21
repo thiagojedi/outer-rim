@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "../../db/client.ts";
 import { authClients, redirectUris, scopes } from "../../db/models.ts";
@@ -66,7 +66,11 @@ export const createClientApp = (payload: ClientAppPayload): Promise<{
     };
   });
 
-export const getByIdentifier = async (clientId: string, driver = db) => {
+export const getByIdentifier = async (
+  clientId: string,
+  clientSecret?: string,
+  driver = db,
+) => {
   const response = await driver.select({
     id: authClients.id,
     name: authClients.name,
@@ -76,7 +80,12 @@ export const getByIdentifier = async (clientId: string, driver = db) => {
   }).from(authClients)
     .innerJoin(scopes, eq(authClients.id, scopes.clientId))
     .innerJoin(redirectUris, eq(authClients.id, redirectUris.clientId))
-    .where(eq(authClients.id, clientId));
+    .where(
+      and(
+        eq(authClients.id, clientId),
+        clientSecret ? eq(authClients.secret, clientSecret) : undefined,
+      ),
+    );
 
   return {
     ...response.at(0)!,

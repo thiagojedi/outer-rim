@@ -35,10 +35,7 @@ async function getRequest(ctx: FreshContext) {
         throw new Error("not supported media type");
     }
 
-    headers.set(
-      "content-type",
-      "application/x-www-form-urlencoded",
-    );
+    headers.set("content-type", "application/x-www-form-urlencoded");
   }
 
   return new OAuth2Server.Request({
@@ -58,20 +55,14 @@ const getAuthServer = <T extends SessionState>(
 ) => {
   const server = new OAuth2Server(options);
   return {
-    async token(
-      ctx: FreshContext<T>,
-      options?: OAuth2Server.TokenOptions,
-    ) {
+    async token(ctx: FreshContext<T>, options?: OAuth2Server.TokenOptions) {
       try {
         const req = await getRequest(ctx);
         const res = new OAuth2Server.Response();
         await server.token(req, res, options);
         return toResponse(res);
       } catch (e) {
-        if (
-          (e as Error).message ===
-            "not supported media type"
-        ) {
+        if ((e as Error).message === "not supported media type") {
           return Response.json(e, {
             status: STATUS_CODE.NotAcceptable,
           });
@@ -87,11 +78,19 @@ const getAuthServer = <T extends SessionState>(
       ctx: FreshContext<T>,
       options?: OAuth2Server.AuthorizeOptions,
     ) {
+      if (!ctx.state.session.auth) {
+        return ctx.redirect(
+          "/login?" +
+            new URLSearchParams({ redirect: ctx.url.toString() }),
+        );
+      }
       const req = await getRequest(ctx);
       const res = new OAuth2Server.Response();
       await server.authorize(req, res, {
         authenticateHandler: {
-          handle: () => ({ user: { id: 1 } }),
+          handle: () => {
+            return { id: ctx.state.session.userId };
+          },
         },
         ...options,
       });
@@ -118,35 +117,28 @@ const getAuthServer = <T extends SessionState>(
 export const authServer = getAuthServer({
   allowEmptyState: true,
   model: {
-    getClient: function (
-      clientId: string,
-      _clientSecret: string | null,
-    ) {
-      // query db for details with client
-      return clientRepository.getByIdentifier(clientId);
+    getClient: function (clientId, clientSecret) {
+      return clientRepository.getByIdentifier(clientId, clientSecret);
     },
     saveAuthorizationCode: async (
-      code: OAuth2Server.AuthorizationCode,
-      _client: OAuth2Server.Client,
-      _user: OAuth2Server.User,
+      code,
+      client,
+      user: { id: number },
     ) => {
-      /* This is where you store the access code data into the database */
+      await authCodeRepository.persist(code, client, user);
 
-      await authCodeRepository.persist(code);
-
-      return code;
+      return { ...code, client, user };
     },
     saveToken: async (
-      token: OAuth2Server.Token,
-      client: OAuth2Server.Client,
-      user: OAuth2Server.User,
+      token,
+      client,
+      user: { id: number },
     ) => {
       await tokenRepository.persist(token, client, user);
 
-      return token;
+      return { ...token, client, user };
     },
-    getAuthorizationCode: async (authorizationCode: string) => {
-      /* this is where we fetch the stored data from the code */
+    getAuthorizationCode: async (authorizationCode) => {
       const authCode = await authCodeRepository.getByIdentifier(
         authorizationCode,
       );
@@ -167,10 +159,8 @@ export const authServer = getAuthServer({
       };
     },
     revokeAuthorizationCode: async (
-      authorizationCode: OAuth2Server.AuthorizationCode,
+      authorizationCode,
     ) => {
-      /* This is where we delete codes */
-
       const authCode = await authCodeRepository.getByIdentifier(
         authorizationCode.authorizationCode,
       );
@@ -181,8 +171,7 @@ export const authServer = getAuthServer({
 
       return true;
     },
-
-    getAccessToken: async (accessToken: string) => {
+    getAccessToken: async (accessToken) => {
       const token = await tokenRepository.getByBearerToken(accessToken);
 
       if (!token) {
@@ -204,9 +193,7 @@ export const authServer = getAuthServer({
         user: user!,
       };
     },
-    getRefreshToken: async (refreshToken: string) => {
-      /* Retrieves the token from the database */
-
+    getRefreshToken: async (refreshToken) => {
       const token = await tokenRepository.getByRefreshToken(refreshToken);
 
       if (!token) return null;
@@ -226,9 +213,7 @@ export const authServer = getAuthServer({
         user: user!,
       };
     },
-    revokeToken: async (token: { refreshToken?: string }) => {
-      /* Delete the token from the database */
-
+    revokeToken: async (token) => {
       if (!token.refreshToken) {
         return false;
       }
@@ -245,12 +230,14 @@ export const authServer = getAuthServer({
 
       return true;
     },
+    verifyScope: async (token, scope: string) => {
+      if (!scope) {
+        return true;
+      }
 
-    verifyScope: (_token: unknown, _scope: unknown) => {
-      /* This is where we check to make sure the client has access to this scope */
+      const client = await clientRepository.getByIdentifier(token.client.id);
 
-      const userHasAccess = true; // return true if this user / client combo has access to this resource
-      return new Promise<boolean>((resolve) => resolve(userHasAccess));
+      return client.scope.includes(scope);
     },
   },
 });

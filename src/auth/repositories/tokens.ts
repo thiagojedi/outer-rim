@@ -2,21 +2,25 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../../db/client.ts";
 import { tokens } from "../../db/models.ts";
-import * as OAuth2Server from "npm:@types/oauth2-server@3.0.18";
 
 export const persist = async (
-  token: OAuth2Server.Token,
-  client: OAuth2Server.Client,
-  user: OAuth2Server.User,
+  token: {
+    accessToken: string;
+    accessTokenExpiresAt?: Date;
+    refreshToken?: string;
+    refreshTokenExpiresAt?: Date;
+  },
+  client: { id: string },
+  user: { id: number },
   driver = db,
 ) => {
   await driver.insert(tokens).values({
     accessToken: token.accessToken,
     accessTokenExpiresAt: token.accessTokenExpiresAt!,
-    refreshToken: token.refreshToken,
-    refreshTokenExpiresAt: token.refreshTokenExpiresAt,
+    refreshToken: token.refreshToken ?? null,
+    refreshTokenExpiresAt: token.refreshTokenExpiresAt ?? null,
     clientId: client.id,
-    userId: user.id,
+    userId: Number(user.id),
   });
 };
 

@@ -3,7 +3,7 @@ import {
   InProcessMessageQueue,
   MemoryKvStore,
 } from "@fedify/fedify";
-import { parse } from "jsr:@std/semver";
+import { parse } from "@std/semver";
 
 const federation = createFederation({
   kv: new MemoryKvStore(),
