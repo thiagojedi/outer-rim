@@ -117,9 +117,8 @@ const getAuthServer = <T extends SessionState>(
 export const authServer = getAuthServer({
   allowEmptyState: true,
   model: {
-    getClient: function (clientId, clientSecret) {
-      return clientRepository.getByIdentifier(clientId, clientSecret);
-    },
+    getClient: (clientId, clientSecret) =>
+      clientRepository.getByIdentifier(clientId, clientSecret),
     saveAuthorizationCode: async (
       code,
       client,
@@ -196,7 +195,9 @@ export const authServer = getAuthServer({
     getRefreshToken: async (refreshToken) => {
       const token = await tokenRepository.getByRefreshToken(refreshToken);
 
-      if (!token) return null;
+      if (!token) {
+        return null;
+      }
 
       const client = await clientRepository.getByIdentifier(
         token.clientId,
