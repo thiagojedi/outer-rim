@@ -55,7 +55,10 @@ const getAuthServer = <T extends SessionState>(
 ) => {
   const server = new OAuth2Server(options);
   return {
-    async token(ctx: FreshContext<T>, options?: OAuth2Server.TokenOptions) {
+    token: async (
+      ctx: FreshContext<T>,
+      options?: OAuth2Server.TokenOptions,
+    ) => {
       try {
         const req = await getRequest(ctx);
         const res = new OAuth2Server.Response();
@@ -74,10 +77,10 @@ const getAuthServer = <T extends SessionState>(
       }
     },
 
-    async authorize(
+    authorize: async (
       ctx: FreshContext<T>,
       options?: OAuth2Server.AuthorizeOptions,
-    ) {
+    ) => {
       if (!ctx.state.session.auth) {
         return ctx.redirect(
           "/login?" +
@@ -97,10 +100,10 @@ const getAuthServer = <T extends SessionState>(
       return toResponse(res);
     },
 
-    async authenticate(
+    authenticate: async (
       ctx: FreshContext<T>,
       options?: OAuth2Server.AuthenticateOptions,
-    ) {
+    ) => {
       const req = await getRequest(ctx);
       const res = new OAuth2Server.Response();
       const token = await server.authenticate(req, res, options);
@@ -117,8 +120,9 @@ const getAuthServer = <T extends SessionState>(
 export const authServer = getAuthServer({
   allowEmptyState: true,
   model: {
-    getClient: (clientId, clientSecret) =>
-      clientRepository.getByIdentifier(clientId, clientSecret),
+    getClient: (clientId, clientSecret) => {
+      return clientRepository.getByIdentifier(clientId, clientSecret);
+    },
     saveAuthorizationCode: async (
       code,
       client,
