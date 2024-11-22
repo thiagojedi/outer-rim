@@ -41,7 +41,9 @@ export const handler = define.handlers({
   },
 });
 
-const SignInPage = define.page<typeof handler>(({ error }) => {
+const SignInPage = define.page<typeof handler>(({ data }) => {
+  const error = data?.error;
+
   return (
     <main className="container is-max-tablet">
       <form method="POST">
