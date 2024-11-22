@@ -23,7 +23,7 @@
     "@std/media-types": "jsr:@std/media-types@^1.1.0",
     "@std/semver": "jsr:@std/semver@^1.0.3",
     "@types/oauth2-server": "npm:@types/oauth2-server@^3.0.18",
-    "bcrypt": "https://deno.land/x/bcrypt/mod.ts",
+    "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
     "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-orm": "npm:drizzle-orm@^0.36.1",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.25",

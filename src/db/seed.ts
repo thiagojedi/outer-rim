@@ -11,4 +11,4 @@ await createClientApp({
   ],
 });
 
-await createUser("test", "password");
+await createUser("user@example.com", "password", "johndoe");

@@ -37,8 +37,9 @@ export const redirectUris = table("redirect_uri", {
 });
 export const users = table("users", {
   id: int().primaryKey({ autoIncrement: true }),
-  username: text().notNull().unique(),
+  email: text().notNull().unique(),
   password: text().notNull(),
+  username: text().notNull().unique(),
 });
 
 export const tokens = table("auth_tokens", {

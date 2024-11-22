@@ -146,12 +146,8 @@ export const authServer = getAuthServer({
         authorizationCode,
       );
 
-      const client = await clientRepository.getByIdentifier(
-        authCode.clientId,
-      );
-      const user = await userRepository.getUserByCredentials(
-        authCode.userId.toString(),
-      );
+      const client = await clientRepository.getByIdentifier(authCode.clientId);
+      const user = await userRepository.getUserById(authCode.userId);
 
       return {
         authorizationCode: authCode.code,
@@ -181,12 +177,8 @@ export const authServer = getAuthServer({
         return null;
       }
 
-      const client = await clientRepository.getByIdentifier(
-        token.clientId,
-      );
-      const user = await userRepository.getUserByCredentials(
-        token.userId!.toString(),
-      );
+      const client = await clientRepository.getByIdentifier(token.clientId);
+      const user = await userRepository.getUserById(token.userId!);
 
       return {
         ...token,
@@ -203,13 +195,9 @@ export const authServer = getAuthServer({
         return null;
       }
 
-      const client = await clientRepository.getByIdentifier(
-        token.clientId,
-      );
+      const client = await clientRepository.getByIdentifier(token.clientId);
 
-      const user = await userRepository.getUserByCredentials(
-        token.userId!.toString(),
-      );
+      const user = await userRepository.getUserById(token.userId!);
 
       return {
         refreshToken,

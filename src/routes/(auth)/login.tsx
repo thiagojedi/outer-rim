@@ -2,7 +2,7 @@ import { STATUS_CODE } from "@std/http";
 import { FreshContext, page } from "fresh";
 
 import { define } from "../../utils.ts";
-import { getUserByUsername } from "../../auth/repositories/users.ts";
+import { getUserByUsernameOrEmail } from "../../auth/repositories/users.ts";
 
 /**
  * Redirects users back to required page if exists
@@ -22,14 +22,14 @@ export const handler = define.handlers({
   },
   async POST(ctx) {
     const form = await ctx.req.formData();
-    const email = form.get("email")?.toString();
+    const email = form.get("username")?.toString();
     const password = form.get("password")?.toString();
 
     if (!email || !password) {
       return page({ error: true }, { status: STATUS_CODE.BadRequest });
     }
 
-    const user = await getUserByUsername(email, password);
+    const user = await getUserByUsernameOrEmail(email, password);
 
     if (!user) {
       return page({ error: true }, { status: STATUS_CODE.Unauthorized });
@@ -41,15 +41,41 @@ export const handler = define.handlers({
   },
 });
 
-export default function SignInPage({ error }: { error: boolean }) {
+const SignInPage = define.page<typeof handler>(({ error }) => {
   return (
-    <main>
-      <form method="post">
-        <input type="email" name="email" value="" />
-        <input type="password" name="password" value="" />
-        <button type="submit">Sign in</button>
+    <main className="container is-max-tablet">
+      <form method="POST">
+        <div className="field">
+          <label htmlFor="username" className="label">Username or e-mail</label>
+          <div className="control">
+            <input
+              name="username"
+              className={`input + ${error ? "is-danger" : ""}`}
+              type="text"
+            />
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="password" className="label">Password</label>
+          <div className="control">
+            <input
+              name="password"
+              className={`input + ${error ? "is-danger" : ""}`}
+              type="password"
+            />
+          </div>
+        </div>
+
+        <div className="field">
+          <div className="control">
+            <input type="submit" className="button is-primary" value="Login" />
+          </div>
+        </div>
       </form>
       {error && <p>Error on login</p>}
     </main>
   );
-}
+});
+
+export default SignInPage;
