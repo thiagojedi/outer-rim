@@ -1,11 +1,13 @@
 import {
   customType,
   int,
+  primaryKey,
   sqliteTable as table,
   text,
 } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
+const currentTime = sql`(strftime('%FT%R:%fZ'))`;
 const date = customType<{
   data: Date;
   driverData: string;
@@ -14,6 +16,14 @@ const date = customType<{
   toDriver: (value) => value.toISOString(),
   fromDriver: (value) => new Date(Date.parse(value)),
 });
+
+const url = customType<{ data: URL; driverData: string }>({
+  dataType: () => "text",
+  toDriver: (value) => value.href,
+  fromDriver: (value) => new URL(value),
+});
+
+//#region Auth
 
 export const authClients = table("applications", {
   id: text().primaryKey(),
@@ -44,9 +54,9 @@ export const users = table("users", {
 
 export const tokens = table("auth_tokens", {
   accessToken: text().notNull(),
-  accessTokenExpiresAt: date().notNull(),
+  accessTokenExpiresAt: text().notNull(),
   refreshToken: text(),
-  refreshTokenExpiresAt: date(),
+  refreshTokenExpiresAt: text(),
 
   originatingAuthCodeId: text(),
 
@@ -73,7 +83,7 @@ export const authCodes = table("authorization_codes", {
   redirectUri: text(),
   codeChallenge: text(),
   codeChallengeMethod: text(),
-  expiresAt: date().notNull(),
+  expiresAt: text().notNull(),
 
   clientId: text().notNull().references(() => authClients.id, {
     onDelete: "cascade",
@@ -92,3 +102,48 @@ export const authCodeRelations = relations(authCodes, ({ one }) => ({
   }),
   user: one(users, { fields: [authCodes.userId], references: [users.id] }),
 }));
+
+//#endregion
+
+//#region Federation
+
+export const actors = table("actors", {
+  id: int().primaryKey({ autoIncrement: true }).notNull(),
+  userId: int().references(() => users.id),
+  uri: text().notNull().unique(),
+  handle: text().notNull().unique(),
+  name: text(),
+  inboxUrl: url().notNull(),
+  sharedInboxUrl: url(),
+  url: url(),
+  created: date().notNull().default(currentTime),
+});
+
+export const keys = table("keys", {
+  userId: int().notNull().references(() => users.id).primaryKey(),
+  type: text({
+    enum: ["Ed25519", "RSASSA-PKCS1-v1_5"],
+  }),
+  privateKey: text().notNull(),
+  publicKey: text().notNull(),
+  created: date().notNull().default(currentTime),
+});
+
+export const follows = table("follows", {
+  followingId: int().references(() => actors.id),
+  followerId: int().references(() => actors.id),
+  created: date().notNull().default(currentTime),
+}, (table) => ({
+  index: primaryKey({ columns: [table.followingId, table.followerId] }),
+}));
+
+export const posts = table("posts", {
+  id: int().primaryKey().notNull(),
+  uri: text().notNull().unique(),
+  actorId: int().notNull().references(() => actors.id),
+  url: url(),
+  created: date().notNull().default(currentTime),
+  content: text().notNull(),
+});
+
+//#endregion

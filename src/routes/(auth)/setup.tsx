@@ -1,6 +1,9 @@
 import { define } from "../../utils.ts";
 import { createUser, hasUsers } from "../../auth/repositories/users.ts";
 import { page } from "fresh";
+import federation from "../../federation/index.ts";
+import { db } from "../../db/client.ts";
+import { createActor } from "../../federation/repositories/actor.ts";
 
 export const handler = define.handlers({
   GET: async (ctx) => {
@@ -19,7 +22,19 @@ export const handler = define.handlers({
     const password = formData.get("password") as string;
 
     try {
-      await createUser(email, password, username);
+      const context = federation.createContext(ctx.req, undefined);
+      db.transaction(async (tx) => {
+        await createUser(email, password, username, tx);
+        await createActor({
+          userId: 1,
+          uri: context.getActorUri(username).href,
+          name: username,
+          handle: `@${username}@${ctx.req.url}`,
+          inboxUrl: context.getInboxUri(username),
+          sharedInboxUrl: context.getInboxUri(),
+          url: context.getActorUri(username),
+        }, tx);
+      });
 
       return ctx.redirect("/login");
     } catch {

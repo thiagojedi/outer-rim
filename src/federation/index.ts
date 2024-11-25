@@ -4,6 +4,9 @@ import {
   MemoryKvStore,
 } from "@fedify/fedify";
 import { parse } from "@std/semver";
+import { setupActor } from "./actor.ts";
+import { setupFollows } from "./follow.ts";
+import { setupNotes } from "./note.ts";
 
 const federation = createFederation({
   kv: new MemoryKvStore(),
@@ -25,5 +28,16 @@ federation.setNodeInfoDispatcher("/nodeinfo/2.1", (_ctx) => {
     },
   };
 });
+
+const inbox = federation.setInboxListeners(
+  "/users/{identifier}/inbox",
+  "/inbox",
+);
+
+setupActor(federation);
+
+setupFollows(inbox);
+
+setupNotes(federation);
 
 export default federation;
