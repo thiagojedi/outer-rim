@@ -1,6 +1,11 @@
 import "@std/dotenv/load";
 import { drizzle } from "drizzle-orm/libsql/node";
 import * as schema from "./models.ts";
+import {
+  LibSQLDatabase as Database,
+  LibSQLTransaction as Transaction,
+} from "drizzle-orm/libsql";
+import { ExtractTablesWithRelations } from "drizzle-orm";
 
 export const db = drizzle({
   connection: Deno.env.get("DB_CONNECTION")!,
@@ -14,3 +19,7 @@ export const prepareDb = async () => {
         PRAGMA foreign_keys = on ;
     `);
 };
+
+export type Driver =
+  | Database<typeof schema>
+  | Transaction<typeof schema, ExtractTablesWithRelations<typeof schema>>;

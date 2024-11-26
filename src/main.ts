@@ -9,6 +9,7 @@ import { type State } from "./utils.ts";
 import { STATUS_CODE } from "@std/http/status";
 import { getLogger } from "@logtape/logtape";
 import { sessionMiddleware } from "./auth/session.ts";
+import { federationMiddleware } from "./federation/index.ts";
 
 export const app = new App<State>();
 app.use(staticFiles());
@@ -33,6 +34,8 @@ app.use(
 );
 
 app.use(sessionMiddleware());
+
+app.use(federationMiddleware());
 
 await fsRoutes(app, {
   dir: "./src/",

@@ -6,17 +6,15 @@ import {
   importJwk,
   Person,
 } from "@fedify/fedify";
-import { db } from "../db/client.ts";
-import { actors, keys, users } from "../db/models.ts";
-import { eq } from "drizzle-orm";
+import { getActorByIdentifier } from "./repositories/actor.ts";
+import { getUserByUsernameOrEmail } from "../auth/repositories/users.ts";
+import { createKey, getKeysForUser } from "./repositories/key.ts";
 
 export const setupActor = (federation: Federation<unknown>) => {
   federation.setActorDispatcher(
     "/users/{identifier}",
     async (ctx, identifier) => {
-      const [user] = await db.select({ name: actors.name }).from(users)
-        .innerJoin(actors, eq(actors.userId, users.id))
-        .where(eq(users.username, identifier));
+      const user = await getActorByIdentifier(identifier);
 
       if (!user) return null;
 
@@ -35,51 +33,46 @@ export const setupActor = (federation: Federation<unknown>) => {
         assertionMethods: keys.map((key) => key.multikey),
       });
     },
-  )
-    .setKeyPairsDispatcher(async (_, identifier) => {
-      const user = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.username, identifier),
-      });
+  ).setKeyPairsDispatcher(async (_, identifier) => {
+    const user = await getUserByUsernameOrEmail(identifier);
 
-      if (!user) {
-        return [];
-      }
+    if (!user) {
+      return [];
+    }
 
-      const rows = await db.query.keys.findMany({
-        where: (keys, { eq }) => eq(keys.userId, user.id),
-      });
-      const keysMap = Object.fromEntries(rows.map((row) => [row.type, row]));
+    const rows = await getKeysForUser(user.id);
+    const keysMap = Object.fromEntries(rows.map((row) => [row.type, row]));
 
-      const promises = (["RSASSA-PKCS1-v1_5", "Ed25519"] as const).map(
+    return (await Promise.allSettled(
+      (["Ed25519", "RSASSA-PKCS1-v1_5"] as const).map(
         async (keyType) => {
           if (keysMap[keyType]) {
-            return ({
+            return {
               privateKey: await importJwk(
-                JSON.parse(keysMap[keyType].private_key),
+                JSON.parse(keysMap[keyType].privateKey),
                 "private",
               ),
               publicKey: await importJwk(
-                JSON.parse(keysMap[keyType].public_key),
+                JSON.parse(keysMap[keyType].publicKey),
                 "public",
               ),
-            });
+            } as CryptoKeyPair;
           } else {
             const { privateKey, publicKey } = await generateCryptoKeyPair(
               keyType,
             );
 
-            await db.insert(keys).values({
+            await createKey({
               userId: user.id,
               type: keyType,
               privateKey: JSON.stringify(await exportJwk(privateKey)),
               publicKey: JSON.stringify(await exportJwk(publicKey)),
             });
 
-            return ({ privateKey, publicKey });
+            return { privateKey, publicKey } as CryptoKeyPair;
           }
         },
-      );
-
-      return Promise.all(promises);
-    });
+      ),
+    )).filter((r) => r.status === "fulfilled").map((r) => r.value);
+  });
 };

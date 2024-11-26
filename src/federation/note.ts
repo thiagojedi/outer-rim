@@ -5,24 +5,14 @@ import {
   PUBLIC_COLLECTION,
   RequestContext,
 } from "@fedify/fedify";
-import { db } from "../db/client.ts";
-import { actors, posts, users } from "../db/models.ts";
-import { and, eq } from "drizzle-orm";
+import { getPost } from "./repositories/post.ts";
 
 export const setupNotes = (federation: Federation<unknown>) => {
   federation.setObjectDispatcher(
     Note,
     "/users/{identifier}/posts/{id}",
     async (ctx, values) => {
-      const [post] = await db.select().from(posts).innerJoin(
-        actors,
-        eq(actors.id, posts.actorId),
-      )
-        .innerJoin(users, eq(users.id, actors.userId))
-        .where(and(
-          eq(users.username, values.identifier),
-          eq(posts.id, Number(values.id)),
-        ));
+      const post = await getPost(values.identifier, values.id);
 
       if (!post) {
         return null;

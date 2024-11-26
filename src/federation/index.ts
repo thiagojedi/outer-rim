@@ -3,7 +3,10 @@ import {
   InProcessMessageQueue,
   MemoryKvStore,
 } from "@fedify/fedify";
+import { integrateHandler } from "@fedify/fedify/x/fresh";
+import { FreshContext } from "fresh";
 import { parse } from "@std/semver";
+
 import { setupActor } from "./actor.ts";
 import { setupFollows } from "./follow.ts";
 import { setupNotes } from "./note.ts";
@@ -41,3 +44,6 @@ setupFollows(inbox);
 setupNotes(federation);
 
 export default federation;
+
+export const federationMiddleware = () => ({ req, ...ctx }: FreshContext) =>
+  integrateHandler(federation, () => undefined)(req, ctx);

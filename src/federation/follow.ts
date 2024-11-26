@@ -5,9 +5,8 @@ import {
   InboxListenerSetters,
   Undo,
 } from "@fedify/fedify";
-import { db } from "../db/client.ts";
-import { actors, follows, users } from "../db/models.ts";
-import { and, eq } from "drizzle-orm";
+import { createActor, getActorByIdentifier } from "./repositories/actor.ts";
+import { createFollow, deleteFollow } from "./repositories/follow.ts";
 
 export const setupFollows = (inbox: InboxListenerSetters<unknown>) => {
   inbox.on(Follow, async (ctx, follow) => {
@@ -28,22 +27,18 @@ export const setupFollows = (inbox: InboxListenerSetters<unknown>) => {
       return;
     }
 
-    const [{ id: followingId }] = await db.select({ id: actors.id }).from(
-      actors,
-    )
-      .innerJoin(users, eq(users.id, actors.id))
-      .where(eq(users.username, object.identifier));
+    const { id: followingId } = await getActorByIdentifier(object.identifier);
 
-    const [{ id: followerId }] = await db.insert(actors).values({
+    const { id: followerId } = await createActor({
       uri: follower.id.href,
       handle: await getActorHandle(follower),
       name: follower.name?.toString(),
       inboxUrl: follower.inboxId,
       sharedInboxUrl: follower.endpoints?.sharedInbox,
       url: follower.url?.href ? new URL(follower.url.href) : null,
-    }).returning();
+    });
 
-    await db.insert(follows).values({ followingId, followerId });
+    await createFollow({ followingId, followerId });
 
     const accept = new Accept({
       actor: follow.objectId,
@@ -66,21 +61,6 @@ export const setupFollows = (inbox: InboxListenerSetters<unknown>) => {
         return;
       }
 
-      const actorBeingFollowed = db.$with("follower").as(
-        db.select({ id: actors.id }).from(actors).innerJoin(
-          users,
-          eq(users.id, actors.userId),
-        ).where(eq(users.username, parsed.identifier)),
-      );
-      const actorFollowing = db.$with("following").as(
-        db.select({ id: actors.id }).from(actors).where(
-          eq(actors.uri, undo.actorId.href),
-        ),
-      );
-
-      await db.delete(follows).where(and(
-        eq(follows.followerId, actorFollowing),
-        eq(follows.followingId, actorBeingFollowed.id),
-      ));
+      await deleteFollow(undo.actorId.href, parsed.identifier);
     });
 };

@@ -120,14 +120,18 @@ export const actors = table("actors", {
 });
 
 export const keys = table("keys", {
-  userId: int().notNull().references(() => users.id).primaryKey(),
+  userId: int().notNull().references(() => users.id),
   type: text({
     enum: ["Ed25519", "RSASSA-PKCS1-v1_5"],
   }),
   privateKey: text().notNull(),
   publicKey: text().notNull(),
   created: date().notNull().default(currentTime),
-});
+}, (table) => ({
+  pk: primaryKey({
+    columns: [table.userId, table.type],
+  }),
+}));
 
 export const follows = table("follows", {
   followingId: int().references(() => actors.id),
