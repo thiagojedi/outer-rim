@@ -11,7 +11,8 @@
     63437
   ],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "deno run hook install",
+  "postCreateCommand": "deno install -g -A --unstable-fs --unstable-kv --unstable-temporal -n fedify jsr:@fedify/cli",
+  "postStartCommand": "deno run hook install",
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
