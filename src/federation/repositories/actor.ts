@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, Driver } from "../../db/client.ts";
 import { actors, users } from "../../db/models.ts";
 
@@ -19,7 +19,21 @@ export const createActor = async (
   values: typeof actors.$inferInsert,
   driver: Driver = db,
 ) => {
-  const [newActor] = await driver.insert(actors).values(values).returning();
+  const [newActor] = await driver
+    .insert(actors)
+    .values(values)
+    .onConflictDoUpdate({
+      target: actors.uri,
+      set: {
+        handle: sql`excluded.handle`,
+        name: sql`excluded.name`,
+        inboxUrl: sql`excluded.inbox_url`,
+        sharedInboxUrl: sql`excluded.shared_inbox_url`,
+        url: sql`excluded.url`,
+      },
+      setWhere: sql`actors.uri = excluded.uri`,
+    })
+    .returning();
 
   return newActor;
 };

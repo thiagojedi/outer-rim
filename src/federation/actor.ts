@@ -44,7 +44,7 @@ export const setupActor = (federation: Federation<unknown>) => {
     const keysMap = Object.fromEntries(rows.map((row) => [row.type, row]));
 
     return (await Promise.allSettled(
-      (["Ed25519", "RSASSA-PKCS1-v1_5"] as const).map(
+      (["RSASSA-PKCS1-v1_5", "Ed25519"] as const).map(
         async (keyType) => {
           if (keysMap[keyType]) {
             return {

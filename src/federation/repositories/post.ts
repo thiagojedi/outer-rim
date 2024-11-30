@@ -7,10 +7,10 @@ export const getPost = async (
   postId: string,
   driver: Driver = db,
 ) => {
-  const [post] = await driver.select().from(posts).innerJoin(
-    actors,
-    eq(actors.id, posts.actorId),
-  )
+  const [post] = await driver
+    .select()
+    .from(posts)
+    .innerJoin(actors, eq(actors.id, posts.actorId))
     .innerJoin(users, eq(users.id, actors.userId))
     .where(and(
       eq(users.username, username),

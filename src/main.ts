@@ -5,16 +5,24 @@
 /// <reference lib="deno.ns" />
 
 import { App, fsRoutes, staticFiles } from "fresh";
-import { type State } from "./utils.ts";
+import { getXForwardedRequest } from "@hongminhee/x-forwarded-fetch";
 import { STATUS_CODE } from "@std/http/status";
 import { getLogger } from "@logtape/logtape";
+
 import { sessionMiddleware } from "./auth/session.ts";
 import { federationMiddleware } from "./federation/index.ts";
+import { type State } from "./utils.ts";
 
 export const app = new App<State>();
-app.use(staticFiles());
 
 const log = getLogger(["outer-ring"]);
+
+app.use(async (ctx) => {
+  //@ts-expect-error: need to add this to allow proxy
+  ctx.req = await getXForwardedRequest(ctx.req);
+  return ctx.next();
+});
+
 app.use(
   ({ req, ...ctx }) => {
     log.warn`${req.method} ${req.url}`;
@@ -36,6 +44,8 @@ app.use(
 app.use(sessionMiddleware());
 
 app.use(federationMiddleware());
+
+app.use(staticFiles());
 
 await fsRoutes(app, {
   dir: "./src/",

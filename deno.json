@@ -15,6 +15,7 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "@fedify/fedify": "jsr:@fedify/fedify@^1.2.3",
+    "@hongminhee/x-forwarded-fetch": "jsr:@hongminhee/x-forwarded-fetch@^0.2.0",
     "@libsql/client": "npm:@libsql/client@^0.14.0",
     "@logtape/logtape": "jsr:@logtape/logtape@^0.7.1",
     "@preact/signals": "npm:@preact/signals@^1.3.0",

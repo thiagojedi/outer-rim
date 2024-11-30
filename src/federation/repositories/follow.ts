@@ -12,20 +12,21 @@ export const deleteFollow = async (
   followingUsername: string,
   driver: Driver = db,
 ) => {
-  const actorBeingFollowed = driver.$with("follower").as(
-    driver.select({ id: actors.id }).from(actors).innerJoin(
-      users,
-      eq(users.id, actors.userId),
-    ).where(eq(users.username, followingUsername)),
-  );
-  const actorFollowing = driver.$with("following").as(
-    driver.select({ id: actors.id }).from(actors).where(
-      eq(actors.uri, followerUri),
-    ),
-  );
+  const follower = driver
+    .select({ id: actors.id })
+    .from(actors)
+    .where(eq(actors.uri, followerUri));
 
-  await driver.delete(follows).where(and(
-    eq(follows.followerId, actorFollowing),
-    eq(follows.followingId, actorBeingFollowed.id),
-  ));
+  const following = driver
+    .select({ id: actors.id })
+    .from(actors)
+    .innerJoin(users, eq(users.id, actors.userId))
+    .where(eq(users.username, followingUsername));
+
+  await driver
+    .delete(follows)
+    .where(and(
+      eq(follows.followerId, follower),
+      eq(follows.followingId, following),
+    ));
 };
