@@ -19,23 +19,32 @@
     "@libsql/client": "npm:@libsql/client@^0.14.0",
     "@logtape/logtape": "jsr:@logtape/logtape@^0.7.1",
     "@preact/signals": "npm:@preact/signals@^1.3.0",
+    "@std/assert": "jsr:@std/assert@^1.0.8",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.2",
     "@std/http": "jsr:@std/http@^1.0.9",
     "@std/media-types": "jsr:@std/media-types@^1.1.0",
     "@std/semver": "jsr:@std/semver@^1.0.3",
+    "@std/testing": "jsr:@std/testing@^1.0.5",
     "@types/oauth2-server": "npm:@types/oauth2-server@^3.0.18",
+    "@types/sanitize-html": "npm:@types/sanitize-html@^2.13.0",
     "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
     "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-orm": "npm:drizzle-orm@^0.36.1",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.25",
-    "lint-staged": "npm:lint-staged@^15.2.10",
     "oauth2-server": "npm:oauth2-server@^3.1.1",
     "preact": "npm:preact@^10.24.3",
+    "sanitize-html": "npm:sanitize-html@^2.13.1",
     "zod": "npm:zod@^3.23.8"
   },
   "nodeModulesDir": "auto",
-  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
   "unstable": [
     "temporal"
-  ]
+  ],
+  "fmt": {
+    "exclude": ["static/"]
+  }
 }
