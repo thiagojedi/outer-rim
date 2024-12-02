@@ -1,12 +1,12 @@
 import { compare, genSalt, hash } from "bcrypt";
-import { db } from "../../db/client.ts";
+import { db, Driver } from "../../db/client.ts";
 import { users } from "../../db/models.ts";
 
 export const createUser = async (
   email: string,
   password: string,
   username: string,
-  driver = db,
+  driver: Driver = db,
 ) => {
   const salt = genSalt();
   await driver.insert(users).values({
@@ -18,7 +18,7 @@ export const createUser = async (
 
 export const getUserById = (
   identifier: number,
-  driver = db,
+  driver: Driver = db,
 ) =>
   driver.query.users.findFirst({
     where: (users, { eq }) => eq(users.id, identifier),
@@ -27,7 +27,7 @@ export const getUserById = (
 export const getUserByUsernameOrEmail = async (
   usernameOrEmail: string,
   password?: string,
-  driver = db,
+  driver: Driver = db,
 ) => {
   const user = await driver.query.users.findFirst({
     where: (users, { eq, or }) =>
