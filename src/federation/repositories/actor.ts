@@ -6,7 +6,11 @@ export const getActorByIdentifier = async (
   identifier: string,
   driver: Driver = db,
 ) => {
-  const [user] = await driver.select({ id: actors.id, name: actors.name }).from(
+  const [user] = await driver.select({
+    id: actors.id,
+    name: actors.name,
+    created: actors.created,
+  }).from(
     users,
   )
     .innerJoin(actors, eq(actors.userId, users.id))
