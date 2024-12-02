@@ -44,11 +44,10 @@ declare namespace Mastodon {
     display_name: string;
     locked: boolean;
     bot: boolean;
-    discoverable: boolean;
-    indexable: boolean;
-    group: boolean;
     created_at: string;
     note: string;
+    group: boolean;
+    discoverable: null | boolean;
     url: string;
     avatar: string;
     avatar_static: string;

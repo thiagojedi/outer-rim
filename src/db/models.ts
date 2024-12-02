@@ -148,6 +148,9 @@ export const posts = table("posts", {
   url: url(),
   created: date().notNull().default(currentTime),
   content: text().notNull(),
+  visibility: text({ enum: ["public", "unlisted", "private", "direct"] }),
+  sensitive: int({ mode: "boolean" }),
+  language: text(),
 });
 
 //#endregion

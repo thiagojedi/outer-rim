@@ -11,14 +11,14 @@ import type { SessionState } from "./session.ts";
 import { STATUS_CODE } from "@std/http";
 import { parseMediaType } from "@std/media-types";
 
-async function getRequest(ctx: FreshContext) {
+async function getRequest(ctx: FreshContext, skipBody = false) {
   const query = Object.fromEntries(ctx.url.searchParams.entries());
   const method = ctx.req.method;
   const headers = new Headers(ctx.req.headers);
 
   let body: unknown;
   const content = headers.get("content-type");
-  if (content) {
+  if (content && !skipBody) {
     const [mediaType] = parseMediaType(content);
     switch (mediaType) {
       case "application/json":
@@ -104,15 +104,25 @@ const getAuthServer = <T extends SessionState>(
       ctx: FreshContext<T>,
       options?: OAuth2Server.AuthenticateOptions,
     ) => {
-      const req = await getRequest(ctx);
+      const req = await getRequest(ctx, true);
       const res = new OAuth2Server.Response();
-      const token = await server.authenticate(req, res, options);
+      try {
+        const token = await server.authenticate(req, res, options);
 
-      if (res.status !== STATUS_CODE.OK) {
-        return toResponse(res);
+        if (res.status !== STATUS_CODE.OK) {
+          return toResponse(res);
+        }
+        ctx.state.session = { auth: true, userId: token.userId };
+        return ctx.next();
+      } catch (e) {
+        if ((e as OAuth2Server.Response).status === STATUS_CODE.Unauthorized) {
+          return Response.json(
+            { "error": "The access token is invalid" },
+            e as OAuth2Server.Response,
+          );
+        }
+        return Response.json(e, { status: STATUS_CODE.InternalServerError });
       }
-      ctx.state.session = { auth: true, userId: token.userId };
-      return ctx.next();
     },
   };
 };

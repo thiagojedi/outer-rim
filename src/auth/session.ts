@@ -14,7 +14,7 @@ export const sessionMiddleware =
   ) => {
     const cookies = getCookies(ctx.req.headers);
 
-    const sessionCookie = cookies.station
+    const sessionCookie = cookies[cookieName]
       ? JSON.parse(atob(cookies[cookieName]))
       : { auth: false, userId: -1 };
     ctx.state.session = { ...sessionCookie };
