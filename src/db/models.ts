@@ -54,9 +54,9 @@ export const users = table("users", {
 
 export const tokens = table("auth_tokens", {
   accessToken: text().notNull(),
-  accessTokenExpiresAt: text().notNull(),
+  accessTokenExpiresAt: date().notNull(),
   refreshToken: text(),
-  refreshTokenExpiresAt: text(),
+  refreshTokenExpiresAt: date(),
 
   originatingAuthCodeId: text(),
 
@@ -83,7 +83,7 @@ export const authCodes = table("authorization_codes", {
   redirectUri: text(),
   codeChallenge: text(),
   codeChallengeMethod: text(),
-  expiresAt: text().notNull(),
+  expiresAt: date().notNull(),
 
   clientId: text().notNull().references(() => authClients.id, {
     onDelete: "cascade",
