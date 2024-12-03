@@ -5,13 +5,11 @@ import { users } from "../../db/models.ts";
 export const createUser = async (
   email: string,
   password: string,
-  username: string,
   driver: Driver = db,
 ) => {
   const salt = genSalt();
   await driver.insert(users).values({
     email,
-    username,
     password: await hash(password, await salt),
   });
 };
@@ -30,11 +28,7 @@ export const getUserByUsernameOrEmail = async (
   driver: Driver = db,
 ) => {
   const user = await driver.query.users.findFirst({
-    where: (users, { eq, or }) =>
-      or(
-        eq(users.username, usernameOrEmail),
-        eq(users.email, usernameOrEmail),
-      ),
+    where: (users, { eq }) => eq(users.email, usernameOrEmail),
   });
 
   if (!user) return;

@@ -5,7 +5,7 @@ import {
   sqliteTable as table,
   text,
 } from "drizzle-orm/sqlite-core";
-import { relations, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 const currentTime = sql`(strftime('%FT%R:%fZ'))`;
 const date = customType<{
@@ -49,7 +49,6 @@ export const users = table("users", {
   id: int().primaryKey({ autoIncrement: true }),
   email: text().notNull().unique(),
   password: text().notNull(),
-  username: text().notNull().unique(),
 });
 
 export const tokens = table("auth_tokens", {
@@ -70,14 +69,6 @@ export const tokens = table("auth_tokens", {
   }),
 });
 
-export const tokenRelations = relations(tokens, ({ one }) => ({
-  client: one(authClients, {
-    fields: [tokens.clientId],
-    references: [authClients.id],
-  }),
-  user: one(users, { fields: [tokens.userId], references: [users.id] }),
-}));
-
 export const authCodes = table("authorization_codes", {
   code: text().notNull(),
   redirectUri: text(),
@@ -94,14 +85,6 @@ export const authCodes = table("authorization_codes", {
     onUpdate: "cascade",
   }),
 });
-
-export const authCodeRelations = relations(authCodes, ({ one }) => ({
-  client: one(authClients, {
-    fields: [authCodes.clientId],
-    references: [authClients.id],
-  }),
-  user: one(users, { fields: [authCodes.userId], references: [users.id] }),
-}));
 
 //#endregion
 
@@ -151,3 +134,8 @@ export const posts = table("posts", {
 });
 
 //#endregion
+
+export const settings = table("settings", {
+  key: text().primaryKey().notNull(),
+  value: text(),
+});
