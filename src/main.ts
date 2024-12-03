@@ -10,7 +10,7 @@ import { STATUS_CODE } from "@std/http/status";
 import { getLogger } from "@logtape/logtape";
 
 import { sessionMiddleware } from "./auth/session.ts";
-import { federationMiddleware } from "./federation/index.ts";
+import { federationMiddleware } from "./federation/mod.ts";
 import { type State } from "./utils.ts";
 
 export const app = new App<State>();

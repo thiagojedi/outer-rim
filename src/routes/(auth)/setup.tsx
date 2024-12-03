@@ -1,7 +1,7 @@
 import { define } from "../../utils.ts";
 import { createUser, hasUsers } from "../../auth/repositories/users.ts";
 import { page } from "fresh";
-import federation from "../../federation/index.ts";
+import federation from "../../federation/mod.ts";
 import { db } from "../../db/client.ts";
 import { createActor } from "../../federation/repositories/actor.ts";
 
