@@ -1,13 +1,13 @@
-import { useState } from "preact/hooks";
 import { Card } from "../common/components/Card.tsx";
 import { FunctionComponent } from "preact";
+import { useSignal } from "@preact/signals";
 
 export const UserForm: FunctionComponent<{ method: "POST" | "PATCH" }> = (
   { method },
 ) => {
-  const [handle, setHandle] = useState<string>("username");
-  const [name, setName] = useState<string>("");
-  const [bio, setBio] = useState<string>("");
+  const handle = useSignal("username");
+  const name = useSignal("Display name");
+  const bio = useSignal("Profile bio");
 
   return (
     <form method={method} className="form">
@@ -19,21 +19,24 @@ export const UserForm: FunctionComponent<{ method: "POST" | "PATCH" }> = (
             className="input"
             name="handle"
             placeholder="username"
-            onChange={(e) => setHandle(e.currentTarget.value)}
+            pattern="[a-z0-9_]"
+            onChange={(e) => handle.value = e.currentTarget.value}
           />
           <span className="icon is-small is-left">
             <i className="fas fa-at"></i>
           </span>
         </div>
+
+        <p className="help">Accept letters, numbers and underscores</p>
         <p className="help is-danger">This cannot be changed in the future</p>
       </div>
 
       <div className="columns is-flex-direction-row-reverse">
         <div className="column">
           <Card
-            title={name}
+            title={name.value}
             subtitle={`@${handle}`}
-            content={bio}
+            content={bio.value}
           />
         </div>
 
@@ -96,7 +99,7 @@ export const UserForm: FunctionComponent<{ method: "POST" | "PATCH" }> = (
                   type="text"
                   className="input"
                   name="name"
-                  onChange={(e) => setName(e.currentTarget.value)}
+                  onChange={(e) => name.value = e.currentTarget.value}
                 />
               </div>
             </div>
@@ -109,15 +112,21 @@ export const UserForm: FunctionComponent<{ method: "POST" | "PATCH" }> = (
                 <textarea
                   name="bio"
                   className="input"
-                  onChange={(e) => setBio(e.currentTarget.value)}
+                  onChange={(e) => bio.value = e.currentTarget.value}
                 />
               </div>
             </div>
           </div>
 
+          <div className="checkboxes">
+            <label className="checkbox">
+              <input name="bot" type="checkbox" /> Is Bot?
+            </label>
+          </div>
+
           <br />
 
-          <p className="field is-grouped">
+          <div className="field is-grouped">
             <div className="control">
               <input type="submit" className="button is-primary" value="Save" />
             </div>
@@ -125,7 +134,7 @@ export const UserForm: FunctionComponent<{ method: "POST" | "PATCH" }> = (
             <div className="control">
               <input type="reset" className="button" />
             </div>
-          </p>
+          </div>
         </div>
       </div>
     </form>
