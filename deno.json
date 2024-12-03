@@ -9,7 +9,7 @@
     "start": "deno run -A src/main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "hook": "deno run --allow-run=git -R=.git/ -W=.hooks/ https://deno.land/x/deno_hooks@0.1.1/mod.ts",
-    "db:push": "npx drizzle-kit push"
+    "db:push": "deno run -A npm:drizzle-kit push"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],
@@ -25,13 +25,17 @@
     "@std/semver": "jsr:@std/semver@^1.0.3",
     "@types/oauth2-server": "npm:@types/oauth2-server@^3.0.18",
     "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
-    "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-orm": "npm:drizzle-orm@^0.36.1",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.25",
     "lint-staged": "npm:lint-staged@^15.2.10",
     "oauth2-server": "npm:oauth2-server@^3.1.1",
     "preact": "npm:preact@^10.24.3",
     "zod": "npm:zod@^3.23.8"
+  },
+  "scopes": {
+    "npm:drizzle-kit": {
+      "@libsql/client": "./node_modules/@libsql/client/lib-esm/node.js"
+    }
   },
   "nodeModulesDir": "auto",
   "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
