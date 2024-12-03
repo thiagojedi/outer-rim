@@ -32,7 +32,7 @@ export const handler = define.handlers({
           handle: `@${username}@${ctx.req.url}`,
           inboxUrl: context.getInboxUri(username),
           sharedInboxUrl: context.getInboxUri(),
-          url: context.getActorUri(username),
+          url: new URL(`/@${username}`, ctx.url),
         }, tx);
       });
 

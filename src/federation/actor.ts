@@ -31,7 +31,7 @@ export const setupActor = (federation: Federation<unknown>) => {
         endpoints: new Endpoints({
           sharedInbox: ctx.getInboxUri(),
         }),
-        url: ctx.getActorUri(identifier),
+        url: user.url,
         publicKey: keys[0].cryptographicKey,
         assertionMethods: keys.map((key) => key.multikey),
         // Custom fields

@@ -10,6 +10,7 @@ export const getActorByIdentifier = async (
     id: actors.id,
     name: actors.name,
     created: actors.created,
+    url: actors.url,
   }).from(
     users,
   )
