@@ -3,6 +3,9 @@ import { useSignal } from "@preact/signals";
 import { FC } from "preact/compat";
 import { TextInput } from "../common/components/TextInput.tsx";
 import { TextArea } from "../common/components/TextArea.tsx";
+import { useRef } from "preact/hooks";
+import { Checkbox } from "../common/components/Checkbox.tsx";
+import { ImageInput } from "../common/components/ImageInput.tsx";
 
 export const UserForm: FC<
   { initialData?: Record<string, string> }
@@ -12,6 +15,14 @@ export const UserForm: FC<
   const handle = useSignal(initialData?.handle);
   const name = useSignal(initialData?.name);
   const bio = useSignal("");
+
+  const isPublic = useSignal(false);
+
+  const image = useSignal("");
+  const avatar = useSignal("");
+
+  const headerRef = useRef<HTMLInputElement>(null);
+  const avatarRef = useRef<HTMLInputElement>(null);
 
   return (
     <form method="POST" className="form">
@@ -34,59 +45,61 @@ export const UserForm: FC<
             title={name.value}
             subtitle={`@${handle}`}
             content={bio.value}
+            image={image.value}
+            avatar={avatar.value}
+            footer={isPublic.value
+              ? ["123 followers", "123 following"]
+              : undefined}
           />
         </div>
 
         <div className="column">
-          {/*<div className="field is-grouped">*/}
-          {/*  <div className="file is-boxed">*/}
-          {/*    <label className="file-label">*/}
-          {/*      <input className="file-input" type="file" name="header" />*/}
-          {/*      <span className="file-cta">*/}
-          {/*        <span className="file-icon">*/}
-          {/*          <i className="fas fa-upload"></i>*/}
-          {/*        </span>*/}
-          {/*        <span className="file-label">Header</span>*/}
-          {/*      </span>*/}
-          {/*    </label>*/}
-          {/*  </div>*/}
+          <ImageInput
+            ref={headerRef}
+            name="header"
+            label="Header"
+            accept="image/jpeg"
+            onChange={() => {
+              const file = headerRef.current?.files?.item(0);
 
-          {/*  <div className="control is-expanded">*/}
-          {/*    <div className="control">*/}
-          {/*      <textarea*/}
-          {/*        className="input"*/}
-          {/*        name="headerDescription"*/}
-          {/*        placeholder="Header description (optional)"*/}
-          {/*      />*/}
-          {/*    </div>*/}
-          {/*    <p className="help">600x200 images are best</p>*/}
-          {/*  </div>*/}
-          {/*</div>*/}
+              image.value = file ? URL.createObjectURL(file) : "";
+            }}
+          />
+          <div className="field is-grouped">
+            <div className="file is-boxed">
+              <label className="file-label">
+                <input
+                  ref={avatarRef}
+                  className="file-input"
+                  type="file"
+                  name="avatar"
+                  accept="image/jpeg"
+                  onChange={() => {
+                    const file = avatarRef.current?.files?.item(0);
 
-          {/*<div className="field is-grouped">*/}
-          {/*  <div className="file is-boxed">*/}
-          {/*    <label className="file-label">*/}
-          {/*      <input className="file-input" type="file" name="avatar" />*/}
-          {/*      <span className="file-cta">*/}
-          {/*        <span className="file-icon">*/}
-          {/*          <i className="fas fa-upload"></i>*/}
-          {/*        </span>*/}
-          {/*        <span className="file-label">Avatar</span>*/}
-          {/*      </span>*/}
-          {/*    </label>*/}
-          {/*  </div>*/}
+                    avatar.value = file ? URL.createObjectURL(file) : "";
+                  }}
+                />
+                <span className="file-cta">
+                  <span className="file-icon">
+                    <i className="fas fa-upload"></i>
+                  </span>
+                  <span className="file-label">Avatar</span>
+                </span>
+              </label>
+            </div>
 
-          {/*  <div className="control is-expanded">*/}
-          {/*    <div className="control">*/}
-          {/*      <textarea*/}
-          {/*        className="input"*/}
-          {/*        name="avatarDescription"*/}
-          {/*        placeholder="Avatar description (optional)"*/}
-          {/*      />*/}
-          {/*    </div>*/}
-          {/*    <p className="help">1:1 images are best</p>*/}
-          {/*  </div>*/}
-          {/*</div>*/}
+            <div className="control is-expanded">
+              <div className="control">
+                <textarea
+                  className="input"
+                  name="avatarDescription"
+                  placeholder="Avatar description (optional)"
+                />
+              </div>
+              <p className="help">1:1 images are best</p>
+            </div>
+          </div>
 
           <TextInput
             type="text"
@@ -102,11 +115,15 @@ export const UserForm: FC<
             onChange={(e) => bio.value = e.currentTarget.value}
           />
 
-          {/*<div className="checkboxes">*/}
-          {/*  <label className="checkbox">*/}
-          {/*    <input name="bot" type="checkbox" /> Is Bot?*/}
-          {/*  </label>*/}
-          {/*</div>*/}
+          <div className="checkboxes">
+            <Checkbox label="Is Bot?" name="bot" />
+
+            <Checkbox
+              label="Show relations"
+              name="public"
+              onChange={(e) => isPublic.value = e.currentTarget.checked}
+            />
+          </div>
 
           <br />
 

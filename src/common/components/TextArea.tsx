@@ -11,17 +11,14 @@ type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>((
   { label, error, ...props },
   ref,
-) => {
-  const { name } = props;
-  return (
-    <div className="field">
+) => (
+  <div className="field">
+    <div className="control">
+      {label && <Label htmlFor={props.name}>{label}</Label>}
       <div className="control">
-        {label && <Label htmlFor={name}>{label}</Label>}
-        <div className="control">
-          <textarea className="input" {...props} ref={ref} />
-        </div>
+        <textarea className="input" {...props} ref={ref} />
       </div>
-      {error && <p className="help is-danger">{error}</p>}
     </div>
-  );
-});
+    {error && <p className="help is-danger">{error}</p>}
+  </div>
+));
