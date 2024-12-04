@@ -1,35 +1,32 @@
 import { Card } from "../common/components/Card.tsx";
-import { FunctionComponent } from "preact";
 import { useSignal } from "@preact/signals";
+import { FC } from "preact/compat";
+import { TextInput } from "../common/components/TextInput.tsx";
+import { TextArea } from "../common/components/TextArea.tsx";
 
-export const UserForm: FunctionComponent<{ method: "POST" | "PATCH" }> = (
-  { method },
+export const UserForm: FC<
+  { initialData?: Record<string, string> }
+> = (
+  { initialData },
 ) => {
-  const handle = useSignal("");
-  const name = useSignal("");
+  const handle = useSignal(initialData?.handle);
+  const name = useSignal(initialData?.name);
   const bio = useSignal("");
 
   return (
-    <form method={method} className="form">
-      <div className="field">
-        <label htmlFor="handle" className="label">Handle</label>
-        <div className="control has-icons-left">
-          <input
-            type="text"
-            className="input"
-            name="handle"
-            placeholder="username"
-            pattern="[a-z0-9_]+"
-            onChange={(e) => handle.value = e.currentTarget.value}
-          />
-          <span className="icon is-small is-left">
-            <i className="fas fa-at"></i>
-          </span>
-        </div>
-
-        <p className="help">Accept letters, numbers and underscores</p>
-        <p className="help is-danger">This cannot be changed in the future</p>
-      </div>
+    <form method="POST" className="form">
+      <TextInput
+        label="Handle"
+        icon="fa-at"
+        type="text"
+        name="handle"
+        required
+        disabled={initialData !== undefined}
+        placeholder="username"
+        pattern="[a-z0-9_]+"
+        value={handle}
+        onChange={(e) => handle.value = e.currentTarget.value}
+      />
 
       <div className="columns is-flex-direction-row-reverse">
         <div className="column">
@@ -91,32 +88,19 @@ export const UserForm: FunctionComponent<{ method: "POST" | "PATCH" }> = (
           {/*  </div>*/}
           {/*</div>*/}
 
-          <div className="field">
-            <div className="control">
-              <label htmlFor="name" className="label">Display name</label>
-              <div className="control">
-                <input
-                  type="text"
-                  className="input"
-                  name="name"
-                  onChange={(e) => name.value = e.currentTarget.value}
-                />
-              </div>
-            </div>
-          </div>
+          <TextInput
+            type="text"
+            name="name"
+            label="Display name"
+            value={name}
+            onChange={(e) => name.value = e.currentTarget.value}
+          />
 
-          {/*<div className="field">*/}
-          {/*  <div className="control">*/}
-          {/*    <label htmlFor="bio" className="label">Bio</label>*/}
-          {/*    <div className="control">*/}
-          {/*      <textarea*/}
-          {/*        name="bio"*/}
-          {/*        className="input"*/}
-          {/*        onChange={(e) => bio.value = e.currentTarget.value}*/}
-          {/*      />*/}
-          {/*    </div>*/}
-          {/*  </div>*/}
-          {/*</div>*/}
+          <TextArea
+            name="bio"
+            label="Bio"
+            onChange={(e) => bio.value = e.currentTarget.value}
+          />
 
           {/*<div className="checkboxes">*/}
           {/*  <label className="checkbox">*/}

@@ -37,3 +37,9 @@ export const createActor = async (
 
   return newActor;
 };
+
+export const updateActor = (
+  id: number,
+  values: Partial<typeof actors.$inferInsert>,
+  driver: Driver = db,
+) => driver.update(actors).set(values).where(eq(actors.id, id)).returning();

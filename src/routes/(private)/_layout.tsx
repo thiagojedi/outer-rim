@@ -1,7 +1,14 @@
 import { define } from "../../utils.ts";
 import { Menu } from "../../common/components/Menu.tsx";
+import { db } from "../../db/client.ts";
+import { actors } from "../../db/models.ts";
 
-const Layout = define.page(({ Component, ...ctx }) => {
+const Layout = define.page(async ({ Component, ...ctx }) => {
+  const users = await db.select({
+    handle: actors.handle,
+    name: actors.name,
+  }).from(actors);
+
   const menu = [
     {
       label: "General",
@@ -9,7 +16,13 @@ const Layout = define.page(({ Component, ...ctx }) => {
     },
     {
       label: "Users",
-      children: [{ label: "Add new", path: "/settings/new-user" }],
+      children: [
+        ...users.map((user) => ({
+          label: user.name || user.handle,
+          path: `/settings/${user.handle}`,
+        })),
+        { label: "Add new", path: "/settings/new-user" },
+      ],
     },
   ];
 
