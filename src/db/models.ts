@@ -5,7 +5,7 @@ import {
   sqliteTable as table,
   text,
 } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 const currentTime = sql`(strftime('%FT%R:%fZ'))`;
 const date = customType<{
@@ -22,6 +22,9 @@ const url = customType<{ data: URL; driverData: string }>({
   toDriver: (value) => value.href,
   fromDriver: (value) => new URL(value),
 });
+
+const uuid = () => text().primaryKey().$defaultFn(() => crypto.randomUUID());
+const bool = () => int({ mode: "boolean" });
 
 //#region Auth
 
@@ -69,6 +72,14 @@ export const tokens = table("auth_tokens", {
   }),
 });
 
+export const tokenRelations = relations(tokens, ({ one }) => ({
+  client: one(authClients, {
+    fields: [tokens.clientId],
+    references: [authClients.id],
+  }),
+  user: one(users, { fields: [tokens.userId], references: [users.id] }),
+}));
+
 export const authCodes = table("authorization_codes", {
   code: text().notNull(),
   redirectUri: text(),
@@ -86,21 +97,17 @@ export const authCodes = table("authorization_codes", {
   }),
 });
 
+export const authCodeRelations = relations(authCodes, ({ one }) => ({
+  client: one(authClients, {
+    fields: [authCodes.clientId],
+    references: [authClients.id],
+  }),
+  user: one(users, { fields: [authCodes.userId], references: [users.id] }),
+}));
+
 //#endregion
 
 //#region Federation
-
-export const actors = table("actors", {
-  id: int().primaryKey({ autoIncrement: true }).notNull(),
-  userId: int().references(() => users.id),
-  uri: text().notNull().unique(),
-  handle: text().notNull().unique(),
-  name: text(),
-  inboxUrl: url().notNull(),
-  sharedInboxUrl: url(),
-  url: url(),
-  created: date().notNull().default(currentTime),
-});
 
 export const keys = table("keys", {
   userId: int().notNull().references(() => users.id),
@@ -125,7 +132,7 @@ export const follows = table("follows", {
 }));
 
 export const posts = table("posts", {
-  id: int().primaryKey().notNull(),
+  id: uuid(),
   uri: text().notNull().unique(),
   actorId: int().notNull().references(() => actors.id),
   url: url(),
@@ -133,9 +140,44 @@ export const posts = table("posts", {
   content: text().notNull(),
 });
 
+export const actors = table("actors", {
+  id: uuid(),
+  identifier: text().unique(),
+  userId: int().references(() => users.id),
+  uri: text().notNull().unique(),
+  handle: text().notNull().unique(),
+  inboxUrl: url().notNull(),
+  sharedInboxUrl: url(),
+  url: url(),
+  created: date().notNull().default(currentTime),
+});
+
 //#endregion
 
-export const settings = table("settings", {
-  key: text().primaryKey().notNull(),
-  value: text(),
+export const profiles = table("profiles", {
+  name: text(),
+  htmlBio: text(),
+
+  manuallyApprovesFollowers: bool().default(false),
+  discoverable: bool().default(true),
+  indexable: bool().default(true),
+  memorial: bool().default(false),
+  silenced: bool().default(false),
+  bot: bool().notNull().default(false),
+
+  actorId: text().primaryKey().references(() => actors.id),
+  avatarId: text().references(() => images.id),
+  headerId: text().references(() => images.id),
+});
+
+export const images = table("images", {
+  id: uuid(),
+  type: text().notNull(),
+  url: text().notNull(),
+  description: text(),
+});
+
+export const emoji = table("emoji", {
+  shortcode: text().notNull(),
+  imageId: text().notNull().references(() => images.id),
 });
