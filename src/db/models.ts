@@ -23,6 +23,9 @@ const url = customType<{ data: URL; driverData: string }>({
   fromDriver: (value) => new URL(value),
 });
 
+const uuid = () => text().primaryKey().$defaultFn(() => crypto.randomUUID());
+const bool = () => int({ mode: "boolean" });
+
 //#region Auth
 
 export const authClients = table("applications", {
@@ -49,7 +52,6 @@ export const users = table("users", {
   id: int().primaryKey({ autoIncrement: true }),
   email: text().notNull().unique(),
   password: text().notNull(),
-  username: text().notNull().unique(),
 });
 
 export const tokens = table("auth_tokens", {
@@ -107,18 +109,6 @@ export const authCodeRelations = relations(authCodes, ({ one }) => ({
 
 //#region Federation
 
-export const actors = table("actors", {
-  id: int().primaryKey({ autoIncrement: true }).notNull(),
-  userId: int().references(() => users.id),
-  uri: text().notNull().unique(),
-  handle: text().notNull().unique(),
-  name: text(),
-  inboxUrl: url().notNull(),
-  sharedInboxUrl: url(),
-  url: url(),
-  created: date().notNull().default(currentTime),
-});
-
 export const keys = table("keys", {
   userId: int().notNull().references(() => users.id),
   type: text({
@@ -142,7 +132,7 @@ export const follows = table("follows", {
 }));
 
 export const posts = table("posts", {
-  id: int().primaryKey().notNull(),
+  id: uuid(),
   uri: text().notNull().unique(),
   actorId: int().notNull().references(() => actors.id),
   url: url(),
@@ -150,4 +140,44 @@ export const posts = table("posts", {
   content: text().notNull(),
 });
 
+export const actors = table("actors", {
+  id: uuid(),
+  identifier: text().unique(),
+  userId: int().references(() => users.id),
+  uri: text().notNull().unique(),
+  handle: text().notNull().unique(),
+  inboxUrl: url().notNull(),
+  sharedInboxUrl: url(),
+  url: url(),
+  created: date().notNull().default(currentTime),
+});
+
 //#endregion
+
+export const profiles = table("profiles", {
+  name: text(),
+  htmlBio: text(),
+
+  manuallyApprovesFollowers: bool().default(false),
+  discoverable: bool().default(true),
+  indexable: bool().default(true),
+  memorial: bool().default(false),
+  silenced: bool().default(false),
+  bot: bool().notNull().default(false),
+
+  actorId: text().primaryKey().references(() => actors.id),
+  avatarId: text().references(() => images.id),
+  headerId: text().references(() => images.id),
+});
+
+export const images = table("images", {
+  id: uuid(),
+  type: text().notNull(),
+  url: text().notNull(),
+  description: text(),
+});
+
+export const emoji = table("emoji", {
+  shortcode: text().notNull(),
+  imageId: text().notNull().references(() => images.id),
+});
