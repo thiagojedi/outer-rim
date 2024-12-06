@@ -3,6 +3,8 @@ import { UserForm } from "../../../islands/UserForm.tsx";
 import { page } from "fresh";
 import { createActor } from "../../../federation/repositories/actor.ts";
 import federation from "../../../federation/mod.ts";
+import { db } from "../../../db/client.ts";
+import { profiles } from "../../../db/models.ts";
 
 export const handler = define.handlers({
   POST: async ({ redirect, req, url }) => {
@@ -16,19 +18,24 @@ export const handler = define.handlers({
       return page({ error: "handle" });
     }
 
-    const name = formData.get("name") as string | null;
+    const name = formData.get("name") as string;
 
-    await createActor({
-      userId: 1,
-      uri: context.getActorUri(username).href,
-      name: name ?? username,
-      handle: `@${username}@${url.host}`,
-      inboxUrl: context.getInboxUri(username),
-      sharedInboxUrl: context.getInboxUri(),
-      url: context.getActorUri(username),
+    await db.transaction(async (t) => {
+      const { id: actorId } = await createActor({
+        userId: 1,
+        identifier: username,
+        uri: context.getActorUri(username).href,
+        handle: `@${username}@${url.host}`,
+        inboxUrl: context.getInboxUri(username),
+        sharedInboxUrl: context.getInboxUri(),
+        url: context.getActorUri(username),
+      }, t);
+
+      await t.insert(profiles)
+        .values({ actorId, name });
     });
 
-    return redirect("/settings");
+    return redirect(`/settings/${username}`);
   },
 });
 
@@ -40,7 +47,7 @@ const NewUserPage = define.page(() => {
         <p>All fields can be changed in the future, except the handle</p>
       </header>
       <br />
-      <UserForm method="POST" />
+      <UserForm />
     </>
   );
 });

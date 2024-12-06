@@ -1,16 +1,17 @@
 import { eq, sql } from "drizzle-orm";
 import { db, Driver } from "../../db/client.ts";
-import { actors, users } from "../../db/models.ts";
+import { actors, profiles } from "../../db/models.ts";
 
 export const getActorByIdentifier = async (
   identifier: string,
   driver: Driver = db,
 ) => {
-  const [user] = await driver.select({ id: actors.id, name: actors.name }).from(
-    users,
-  )
-    .innerJoin(actors, eq(actors.userId, users.id))
-    .where(eq(users.username, identifier));
+  const [user] = await driver.select({ id: actors.id, name: profiles.name })
+    .from(
+      actors,
+    )
+    .innerJoin(profiles, eq(profiles.actorId, actors.id))
+    .where(eq(actors.identifier, identifier));
 
   return user ?? null;
 };
@@ -26,7 +27,6 @@ export const createActor = async (
       target: actors.uri,
       set: {
         handle: sql`excluded.handle`,
-        name: sql`excluded.name`,
         inboxUrl: sql`excluded.inbox_url`,
         sharedInboxUrl: sql`excluded.shared_inbox_url`,
         url: sql`excluded.url`,
@@ -37,9 +37,3 @@ export const createActor = async (
 
   return newActor;
 };
-
-export const updateActor = (
-  id: number,
-  values: Partial<typeof actors.$inferInsert>,
-  driver: Driver = db,
-) => driver.update(actors).set(values).where(eq(actors.id, id)).returning();

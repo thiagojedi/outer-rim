@@ -2,7 +2,13 @@ import { forwardRef, InputHTMLAttributes } from "preact/compat";
 
 export const ImageInput = forwardRef<
   HTMLInputElement,
-  InputHTMLAttributes<HTMLInputElement> & { label: string }
+  InputHTMLAttributes<HTMLInputElement> & {
+    label: string;
+    descriptionName: string;
+    descriptionPlaceholder?: string;
+    helperText?: string;
+    error?: string;
+  }
 >((props, ref) => {
   return (
     <div className="field is-grouped">
@@ -27,11 +33,12 @@ export const ImageInput = forwardRef<
         <div className="control">
           <textarea
             className="input"
-            name="headerDescription"
-            placeholder="Header description (optional)"
+            name={props.descriptionName}
+            placeholder={props.descriptionPlaceholder}
           />
         </div>
-        <p className="help">600x200 images are best</p>
+        {props.error && <p className="help is-danger">{props.error}</p>}
+        {props.helperText && <p className="help">{props.helperText}</p>}
       </div>
     </div>
   );

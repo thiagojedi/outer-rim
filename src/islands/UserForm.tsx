@@ -18,14 +18,14 @@ export const UserForm: FC<
 
   const isPublic = useSignal(false);
 
-  const image = useSignal("");
+  const image = useSignal(initialData?.header);
   const avatar = useSignal("");
 
   const headerRef = useRef<HTMLInputElement>(null);
   const avatarRef = useRef<HTMLInputElement>(null);
 
   return (
-    <form method="POST" className="form">
+    <form method="POST" className="form" encType="multipart/form-data">
       <TextInput
         label="Handle"
         icon="fa-at"
@@ -48,8 +48,8 @@ export const UserForm: FC<
             image={image.value}
             avatar={avatar.value}
             footer={isPublic.value
-              ? ["123 followers", "123 following"]
-              : undefined}
+              ? ["123 posts", "123 followers", "123 following"]
+              : ["123 posts"]}
           />
         </div>
 
@@ -57,6 +57,7 @@ export const UserForm: FC<
           <ImageInput
             ref={headerRef}
             name="header"
+            descriptionName="headerDescription"
             label="Header"
             accept="image/jpeg"
             onChange={() => {
@@ -65,41 +66,19 @@ export const UserForm: FC<
               image.value = file ? URL.createObjectURL(file) : "";
             }}
           />
-          <div className="field is-grouped">
-            <div className="file is-boxed">
-              <label className="file-label">
-                <input
-                  ref={avatarRef}
-                  className="file-input"
-                  type="file"
-                  name="avatar"
-                  accept="image/jpeg"
-                  onChange={() => {
-                    const file = avatarRef.current?.files?.item(0);
 
-                    avatar.value = file ? URL.createObjectURL(file) : "";
-                  }}
-                />
-                <span className="file-cta">
-                  <span className="file-icon">
-                    <i className="fas fa-upload"></i>
-                  </span>
-                  <span className="file-label">Avatar</span>
-                </span>
-              </label>
-            </div>
+          <ImageInput
+            ref={avatarRef}
+            name="avatar"
+            descriptionName="avatarDescription"
+            label="Avatar"
+            accept="image/jpeg"
+            onChange={() => {
+              const file = avatarRef.current?.files?.item(0);
 
-            <div className="control is-expanded">
-              <div className="control">
-                <textarea
-                  className="input"
-                  name="avatarDescription"
-                  placeholder="Avatar description (optional)"
-                />
-              </div>
-              <p className="help">1:1 images are best</p>
-            </div>
-          </div>
+              avatar.value = file ? URL.createObjectURL(file) : "";
+            }}
+          />
 
           <TextInput
             type="text"

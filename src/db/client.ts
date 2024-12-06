@@ -11,6 +11,7 @@ export const db = drizzle({
   connection: Deno.env.get("DB_CONNECTION")!,
   schema,
   casing: "snake_case",
+  logger: true,
 });
 
 export const prepareDb = async () => {
