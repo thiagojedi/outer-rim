@@ -1,7 +1,6 @@
 {
   "lock": false,
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
     "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
     "manifest": "deno task cli manifest $(pwd)",
     "dev": "deno run -A --watch=static/,src/routes/ src/dev.ts",
@@ -38,7 +37,18 @@
     }
   },
   "nodeModulesDir": "auto",
-  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    // We add these libs here to allow correct type check of unstable
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns",
+      "deno.unstable"
+    ]
+  },
   "unstable": [
     "temporal"
   ]

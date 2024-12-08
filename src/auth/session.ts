@@ -26,7 +26,7 @@ export const sessionMiddleware =
         setCookie(response.headers, {
           name: cookieName,
           value: btoa(JSON.stringify(ctx.state.session)),
-          maxAge: 120,
+          maxAge: Temporal.Duration.from({ minutes: 30 }).seconds,
           sameSite: "Lax", // this is important to prevent CSRF attacks
           domain: ctx.url.hostname,
           path: "/",

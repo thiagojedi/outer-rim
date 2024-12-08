@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db, Driver } from "../../db/client.ts";
-import { actors, posts, users } from "../../db/models.ts";
+import { actors, posts } from "../../db/models.ts";
 
 export const getPost = async (
   username: string,
@@ -11,10 +11,9 @@ export const getPost = async (
     .select()
     .from(posts)
     .innerJoin(actors, eq(actors.id, posts.actorId))
-    .innerJoin(users, eq(users.id, actors.userId))
     .where(and(
-      eq(users.username, username),
-      eq(posts.id, Number(postId)),
+      eq(actors.handle, username),
+      eq(posts.id, postId),
     ));
   return post;
 };

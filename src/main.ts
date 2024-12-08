@@ -1,9 +1,3 @@
-/// <reference no-default-lib="true" />
-/// <reference lib="dom" />
-/// <reference lib="dom.iterable" />
-/// <reference lib="dom.asynciterable" />
-/// <reference lib="deno.ns" />
-
 import { App, fsRoutes, staticFiles } from "fresh";
 import { getXForwardedRequest } from "@hongminhee/x-forwarded-fetch";
 import { STATUS_CODE } from "@std/http/status";
