@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { actors, follows, users } from "../../db/models.ts";
+import { actors, follows } from "../../db/models.ts";
 import { db, Driver } from "../../db/client.ts";
 
 export const createFollow = (
@@ -20,8 +20,7 @@ export const deleteFollow = async (
   const following = driver
     .select({ id: actors.id })
     .from(actors)
-    .innerJoin(users, eq(users.id, actors.userId))
-    .where(eq(users.username, followingUsername));
+    .where(eq(actors.handle, followingUsername));
 
   await driver
     .delete(follows)

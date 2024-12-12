@@ -32,7 +32,6 @@ export const setupFollows = (inbox: InboxListenerSetters<unknown>) => {
     const { id: followerId } = await createActor({
       uri: follower.id.href,
       handle: await getActorHandle(follower),
-      name: follower.name?.toString(),
       inboxUrl: follower.inboxId,
       sharedInboxUrl: follower.endpoints?.sharedInbox,
       url: follower.url?.href ? new URL(follower.url.href) : null,

@@ -1,7 +1,6 @@
 {
   "lock": false,
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
     "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
     "manifest": "deno task cli manifest $(pwd)",
     "dev": "deno run -A --watch=static/,src/routes/ src/dev.ts",
@@ -9,7 +8,7 @@
     "start": "deno run -A src/main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "hook": "deno run --allow-run=git -R=.git/ -W=.hooks/ https://deno.land/x/deno_hooks@0.1.1/mod.ts",
-    "db:push": "npx drizzle-kit push"
+    "db:push": "deno run -A npm:drizzle-kit push"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],
@@ -18,6 +17,7 @@
     "@hongminhee/x-forwarded-fetch": "jsr:@hongminhee/x-forwarded-fetch@^0.2.0",
     "@libsql/client": "npm:@libsql/client@^0.14.0",
     "@logtape/logtape": "jsr:@logtape/logtape@^0.7.1",
+    "@modular-forms/preact": "npm:@modular-forms/preact@^0.12.0",
     "@preact/signals": "npm:@preact/signals@^1.3.0",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.2",
     "@std/http": "jsr:@std/http@^1.0.9",
@@ -25,7 +25,6 @@
     "@std/semver": "jsr:@std/semver@^1.0.3",
     "@types/oauth2-server": "npm:@types/oauth2-server@^3.0.18",
     "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
-    "drizzle-kit": "npm:drizzle-kit@^0.28.0",
     "drizzle-orm": "npm:drizzle-orm@^0.36.1",
     "fresh": "jsr:@fresh/core@^2.0.0-alpha.25",
     "lint-staged": "npm:lint-staged@^15.2.10",
@@ -33,8 +32,24 @@
     "preact": "npm:preact@^10.24.3",
     "zod": "npm:zod@^3.23.8"
   },
+  "scopes": {
+    "npm:drizzle-kit": {
+      "@libsql/client": "./node_modules/@libsql/client/lib-esm/node.js"
+    }
+  },
   "nodeModulesDir": "auto",
-  "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    // We add these libs here to allow correct type check of unstable
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns",
+      "deno.unstable"
+    ]
+  },
   "unstable": [
     "temporal"
   ]
