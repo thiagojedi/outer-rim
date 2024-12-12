@@ -1,8 +1,8 @@
-# Outer Ring Project
+# Outer Rim Project
 
-Outer Ring is a single user microblog server for the Activity Pub protocol
+Outer Rim is a single user microblog server for the Activity Pub protocol
 (a.k.a. FediVerse), running on the Deno ecosystem. Inspired by the likes of
-[GoToSocial][gts01] and [Microblog.pub][mbp01].
+[Microblog.pub][mbp01], [GoToSocial][gts01], and [Hollo.social][hol01].
 
 ## Objectives
 
@@ -31,7 +31,14 @@ Outer Ring is a single user microblog server for the Activity Pub protocol
   - [ ] Local
   - [ ] Federated
 
----
+# Etymology
+
+The name 'Outer Rim' is inspired by the territories on Star Wars universe, where
+small planets thrive without any large faction holding power over it.
+
+Sure, it may be home for pirates and smugglers, but it is also where the Rebel
+Alliance stood ground against the authoritarian regime of the Empire.
 
 [mbp01]: https://github.com/tsileo/microblog.pub
 [gts01]: https://gotosocial.org/
+[hol01]: https://docs.hollo.social/
