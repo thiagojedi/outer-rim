@@ -1,5 +1,5 @@
 import { define } from "../../utils.ts";
-import federation from "../../federation/index.ts";
+import federation from "../../federation/mod.ts";
 import { page } from "fresh";
 import { STATUS_CODE } from "@std/http";
 import {
@@ -10,6 +10,7 @@ import {
 export const handler = define.handlers({
   GET: async (ctx) => {
     const handle = ctx.params.handle;
+
     if (handle.search("@") > 1) {
       const context = federation.createContext(ctx.req, undefined);
 

@@ -1,14 +1,21 @@
+import { eq } from "drizzle-orm";
 import { getActorFromUsername } from "./repositories/actors.ts";
 import {
   countFollowersByActor,
   countFollowingByActor,
 } from "./repositories/follows.ts";
 import { countActorsPosts, getPosts } from "./repositories/posts.ts";
+import { db } from "../../db/client.ts";
+import { profiles } from "../../db/models.ts";
 
 export const getProfileFromUsername = async (
   username: string,
 ): Promise<Mastodon.Account> => {
   const user = await getActorFromUsername(username);
+
+  const [profile] = await db.select().from(profiles).where(
+    eq(profiles.actorId, user.id),
+  );
 
   const followingCount = countFollowingByActor(user.id);
   const followerCount = countFollowersByActor(user.id);
@@ -17,7 +24,7 @@ export const getProfileFromUsername = async (
   return {
     username,
     id: user.id.toString(),
-    display_name: user.name ?? username,
+    display_name: profile.name ?? username,
     acct: username,
     created_at: user.created.toISOString(),
     locked: false,
