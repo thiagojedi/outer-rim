@@ -174,7 +174,7 @@ export const images = table("images", {
   id: uuid(),
   type: text().notNull(),
   url: text().notNull(),
-  description: text(),
+  description: text().notNull(),
 });
 
 export const emoji = table("emoji", {

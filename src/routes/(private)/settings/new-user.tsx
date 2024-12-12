@@ -1,13 +1,13 @@
 import { define } from "../../../utils.ts";
 import { UserForm } from "../../../islands/UserForm.tsx";
-import { page } from "fresh";
 import { createActor } from "../../../federation/repositories/actor.ts";
 import federation from "../../../federation/mod.ts";
 import { db } from "../../../db/client.ts";
 import { profiles } from "../../../db/models.ts";
+import { formDataToObject } from "../../../common/helpers/object.ts";
 
 export const handler = define.handlers({
-  POST: async ({ redirect, req, url }) => {
+  POST: async ({ req, url }) => {
     const formData = await req.formData();
 
     const context = federation.createContext(req, undefined);
@@ -15,10 +15,10 @@ export const handler = define.handlers({
     const username = formData.get("handle") as string | null;
 
     if (!username) {
-      return page({ error: "handle" });
+      return Response.error();
     }
 
-    const name = formData.get("name") as string;
+    const body = formDataToObject(formData);
 
     await db.transaction(async (t) => {
       const { id: actorId } = await createActor({
@@ -32,10 +32,10 @@ export const handler = define.handlers({
       }, t);
 
       await t.insert(profiles)
-        .values({ actorId, name });
+        .values({ actorId, htmlBio: body.bio, ...body });
     });
 
-    return redirect(`/settings/${username}`);
+    return Response.json({ username });
   },
 });
 
@@ -47,7 +47,7 @@ const NewUserPage = define.page(() => {
         <p>All fields can be changed in the future, except the handle</p>
       </header>
       <br />
-      <UserForm />
+      <UserForm action="./new-user" method="POST" redirect />
     </>
   );
 });

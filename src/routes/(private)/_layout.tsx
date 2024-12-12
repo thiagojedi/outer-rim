@@ -19,13 +19,13 @@ const Layout = define.page(async ({ Component, ...ctx }) => {
       children: [{ label: "Preferences", path: "/settings" }],
     },
     {
-      label: "Users",
+      label: "Profiles",
       children: [
         ...users.map((user) => ({
           label: user.name || user.handle!,
           path: `/settings/${user.handle}`,
         })),
-        { label: "Add new", path: "/settings/new-user" },
+        { label: "+ Add new", path: "/settings/new-user" },
       ],
     },
   ];
