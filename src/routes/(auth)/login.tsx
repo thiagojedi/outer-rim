@@ -22,7 +22,7 @@ export const handler = define.handlers({
   },
   async POST(ctx) {
     const form = await ctx.req.formData();
-    const email = form.get("username")?.toString();
+    const email = form.get("email")?.toString();
     const password = form.get("password")?.toString();
 
     if (!email || !password) {
@@ -48,10 +48,10 @@ const SignInPage = define.page<typeof handler>(({ data }) => {
     <main className="container is-max-tablet">
       <form method="POST">
         <div className="field">
-          <label htmlFor="username" className="label">Username or e-mail</label>
+          <label htmlFor="email" className="label">E-mail</label>
           <div className="control">
             <input
-              name="username"
+              name="email"
               className={`input + ${error ? "is-danger" : ""}`}
               type="text"
             />

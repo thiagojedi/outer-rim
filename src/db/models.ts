@@ -124,8 +124,8 @@ export const keys = table("keys", {
 }));
 
 export const follows = table("follows", {
-  followingId: int().references(() => actors.id),
-  followerId: int().references(() => actors.id),
+  followingId: text().references(() => actors.id),
+  followerId: text().references(() => actors.id),
   created: date().notNull().default(currentTime),
 }, (table) => ({
   index: primaryKey({ columns: [table.followingId, table.followerId] }),
@@ -174,7 +174,7 @@ export const images = table("images", {
   id: uuid(),
   type: text().notNull(),
   url: text().notNull(),
-  description: text(),
+  description: text().notNull(),
 });
 
 export const emoji = table("emoji", {
