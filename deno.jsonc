@@ -52,5 +52,10 @@
   },
   "unstable": [
     "temporal"
-  ]
+  ],
+  "fmt": {
+    "exclude": [
+      "static/"
+    ]
+  }
 }
