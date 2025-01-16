@@ -30,14 +30,12 @@ const getProfiles = (ctx: FreshContext) => {
 };
 
 export const handler = define.handlers({
-  async GET(ctx) {
+  GET(ctx) {
     if (ctx.state.session.auth) {
       return authSuccess(ctx);
     }
 
-    const accounts = await getProfiles(ctx);
-
-    return page({ accounts, error: false });
+    return page({ error: false });
   },
   async POST(ctx) {
     const form = await ctx.req.formData();
@@ -69,7 +67,7 @@ export const handler = define.handlers({
 });
 
 const SignInPage = define.page<typeof handler>(
-  ({ data: { error, accounts } }) => {
+  ({ data: { error } }) => {
     return (
       <main className="container is-max-tablet">
         <form method="POST">
@@ -96,24 +94,6 @@ const SignInPage = define.page<typeof handler>(
               />
             </div>
           </div>
-
-          {accounts.length > 0 && (
-            <div className="field">
-              <label htmlFor="profile" className="label">Profile</label>
-              <div className="control ">
-                <div className="select">
-                  <select required name="profile" id="profile">
-                    <option value="">Select a profile</option>
-                    {accounts.map((account) => (
-                      <option key={account.id} value={account.id}>
-                        {account.handle}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="field">
             <div className="control">

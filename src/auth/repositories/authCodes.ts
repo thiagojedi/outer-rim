@@ -24,7 +24,7 @@ export const persist = async (
     expiresAt: Date;
   },
   client: { id: string },
-  user: { id: number },
+  user: { id: number; profile: string },
   driver = db,
 ) => {
   await driver.insert(authCodes).values({
@@ -32,6 +32,7 @@ export const persist = async (
     code: authCode.authorizationCode,
     clientId: client.id,
     userId: user.id,
+    profileId: user.profile,
   });
 };
 

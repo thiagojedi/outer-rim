@@ -23,7 +23,7 @@ const url = customType<{ data: URL; driverData: string }>({
   fromDriver: (value) => new URL(value),
 });
 
-const uuid = () => text().primaryKey().$defaultFn(() => crypto.randomUUID());
+const uuid = () => text().$defaultFn(() => crypto.randomUUID());
 const bool = () => int({ mode: "boolean" });
 
 //#region Auth
@@ -70,6 +70,10 @@ export const tokens = table("auth_tokens", {
     onDelete: "cascade",
     onUpdate: "cascade",
   }),
+  profileId: uuid().references(() => actors.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
 });
 
 export const tokenRelations = relations(tokens, ({ one }) => ({
@@ -92,6 +96,10 @@ export const authCodes = table("authorization_codes", {
     onUpdate: "cascade",
   }),
   userId: int().notNull().references(() => users.id, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+  profileId: uuid().references(() => actors.id, {
     onDelete: "cascade",
     onUpdate: "cascade",
   }),
@@ -132,7 +140,7 @@ export const follows = table("follows", {
 }));
 
 export const posts = table("posts", {
-  id: uuid(),
+  id: uuid().primaryKey(),
   uri: text().notNull().unique(),
   actorId: int().notNull().references(() => actors.id),
   url: url(),
@@ -141,7 +149,7 @@ export const posts = table("posts", {
 });
 
 export const actors = table("actors", {
-  id: uuid(),
+  id: uuid().primaryKey(),
   identifier: text().unique(),
   userId: int().references(() => users.id),
   uri: text().notNull().unique(),
@@ -171,7 +179,7 @@ export const profiles = table("profiles", {
 });
 
 export const images = table("images", {
-  id: uuid(),
+  id: uuid().primaryKey(),
   type: text().notNull(),
   url: text().notNull(),
   description: text().notNull(),

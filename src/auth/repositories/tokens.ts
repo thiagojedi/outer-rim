@@ -11,7 +11,7 @@ export const persist = async (
     refreshTokenExpiresAt?: Date;
   },
   client: { id: string },
-  user: { id: number },
+  user: { id: number; profile: string },
   driver = db,
 ) => {
   await driver.insert(tokens).values({
@@ -21,6 +21,7 @@ export const persist = async (
     refreshTokenExpiresAt: token.refreshTokenExpiresAt ?? null,
     clientId: client.id,
     userId: Number(user.id),
+    profileId: user.profile,
   });
 };
 

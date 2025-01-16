@@ -24,12 +24,12 @@ async function getRequest(ctx: FreshContext) {
       case "application/json":
         body = await ctx.req.json();
         break;
-      case "multipart/form-data":
-        body = await ctx.req.formData();
-        break;
       case "application/x-www-form-urlencoded":
-        // Correct content-type
-        body = ctx.req.body;
+      case "multipart/form-data":
+        body = Object.fromEntries((await ctx.req.formData()).entries());
+        if (!body) {
+          body = ctx.req.body;
+        }
         break;
       default:
         throw new Error("not supported media type");
@@ -91,9 +91,10 @@ const getAuthServer = <T extends SessionState>(
       const res = new OAuth2Server.Response();
       await server.authorize(req, res, {
         authenticateHandler: {
-          handle: () => {
-            return { id: ctx.state.session.userId };
-          },
+          handle: () => ({
+            id: ctx.state.session.userId,
+            profile: req.body.profile,
+          }),
         },
         ...options,
       });
@@ -111,7 +112,11 @@ const getAuthServer = <T extends SessionState>(
       if (res.status !== STATUS_CODE.OK) {
         return toResponse(res);
       }
-      ctx.state.session = { auth: true, userId: token.userId };
+      ctx.state.session = {
+        auth: true,
+        userId: token.userId,
+        profileId: token.profileId,
+      };
       return ctx.next();
     },
   };
@@ -126,7 +131,7 @@ export const authServer = getAuthServer({
     saveAuthorizationCode: async (
       code,
       client,
-      user: { id: number },
+      user: { id: number; profile: string },
     ) => {
       await authCodeRepository.persist(code, client, user);
 
@@ -135,7 +140,7 @@ export const authServer = getAuthServer({
     saveToken: async (
       token,
       client,
-      user: { id: number },
+      user: { id: number; profile: string },
     ) => {
       await tokenRepository.persist(token, client, user);
 
@@ -154,7 +159,7 @@ export const authServer = getAuthServer({
         expiresAt: authCode.expiresAt,
         redirectUri: authCode.redirectUri!,
         client,
-        user: user!,
+        user: { ...user!, profile: authCode.profileId },
       };
     },
     revokeAuthorizationCode: async (
