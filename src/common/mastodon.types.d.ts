@@ -10,6 +10,7 @@ declare namespace Mastodon {
     note: string;
     group: boolean;
     discoverable: null | boolean;
+    noindex?: null | boolean;
     url: string;
     avatar: string;
     avatar_static: string;
@@ -18,9 +19,21 @@ declare namespace Mastodon {
     followers_count: number;
     following_count: number;
     statuses_count: number;
-    last_status_at: string;
+    last_status_at: null | string;
     emojis: Emoji[];
     fields: Field[];
+  };
+
+  type Privacy = "public" | "unlisted" | "private" | "direct";
+
+  type CredentialAccount = Account & {
+    source: {
+      note: string;
+      fields: Field[];
+      privacy: Privacy;
+      sensitive: boolean;
+      language: string;
+    };
   };
 
   type Field = {

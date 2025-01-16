@@ -150,7 +150,7 @@ export const posts = table("posts", {
 
 export const actors = table("actors", {
   id: uuid().primaryKey(),
-  identifier: text().unique(),
+  identifier: text().notNull().unique(),
   userId: int().references(() => users.id),
   uri: text().notNull().unique(),
   handle: text().notNull().unique(),
