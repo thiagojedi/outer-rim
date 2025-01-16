@@ -9,6 +9,7 @@ import {
 import { getActorByIdentifier } from "./repositories/actor.ts";
 import { getUserByUsernameOrEmail } from "../auth/repositories/users.ts";
 import { createKey, getKeysForUser } from "./repositories/key.ts";
+import { countFollowers, countFollowing } from "./repositories/follow.ts";
 
 export const setupActor = (federation: Federation<unknown>) => {
   federation.setActorDispatcher(
@@ -23,14 +24,33 @@ export const setupActor = (federation: Federation<unknown>) => {
       return new Person({
         id: ctx.getActorUri(identifier),
         preferredUsername: identifier,
+        // Display name
         name: user.name,
+        published: Temporal.Instant.from(user.created),
         inbox: ctx.getInboxUri(identifier),
         endpoints: new Endpoints({
           sharedInbox: ctx.getInboxUri(),
         }),
-        url: ctx.getActorUri(identifier),
+        url: user.url,
         publicKey: keys[0].cryptographicKey,
         assertionMethods: keys.map((key) => key.multikey),
+        // Custom fields
+        attachments: [],
+        manuallyApprovesFollowers: false,
+        suspended: false,
+        memorial: false,
+        // Bio
+        // summary: '',
+        // Avatar
+        // icon: new Image({
+        //   url: new URL(""),
+        //   mediaType: "image/jpeg"
+        // })
+        // Header
+        // image: new Image({
+        //   url: new URL(""),
+        //   mediaType: "image/jpeg"
+        // })
       });
     },
   ).setKeyPairsDispatcher(async (_, identifier) => {
@@ -75,4 +95,25 @@ export const setupActor = (federation: Federation<unknown>) => {
       ),
     )).filter((r) => r.status === "fulfilled").map((r) => r.value);
   });
+
+  federation
+    .setFollowersDispatcher(
+      "/users/{identifier}/followers",
+      () => ({ items: [] }),
+    )
+    .setCounter(async (_ctx, identifier) => {
+      const { id } = await getActorByIdentifier(identifier);
+
+      return countFollowers(id);
+    });
+
+  federation.setFollowingDispatcher(
+    "/users/{identifier}/following",
+    () => ({ items: [] }),
+  )
+    .setCounter(async (_ctx, identifier) => {
+      const { id } = await getActorByIdentifier(identifier);
+
+      return countFollowing(id);
+    });
 };

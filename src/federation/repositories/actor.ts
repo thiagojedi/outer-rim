@@ -6,7 +6,12 @@ export const getActorByIdentifier = async (
   identifier: string,
   driver: Driver = db,
 ) => {
-  const [user] = await driver.select({ id: actors.id, name: profiles.name })
+  const [user] = await driver.select({
+    id: actors.id,
+    name: profiles.name,
+    created: actors.created,
+    url: actors.url,
+  })
     .from(
       actors,
     )
