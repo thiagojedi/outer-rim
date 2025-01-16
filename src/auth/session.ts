@@ -4,7 +4,7 @@ import { deleteCookie, getCookies, setCookie } from "@std/http/cookie";
 export type SessionConfig = { cookieName?: string };
 
 export type SessionState = {
-  session: { auth: true; userId: number; profileId: number } | {
+  session: { auth: true; userId: number; profileId: string } | {
     auth: false;
     userId: null;
     profileId: null;
@@ -20,7 +20,7 @@ export const sessionMiddleware =
 
     const sessionCookie = cookies.station
       ? JSON.parse(atob(cookies[cookieName]))
-      : { auth: false, userId: -1, profileId: -1 };
+      : { auth: false, userId: -1, profileId: "" };
     ctx.state.session = { ...sessionCookie };
 
     const response = await ctx.next();

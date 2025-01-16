@@ -16,6 +16,15 @@ export const getActorByIdentifier = async (
   return user ?? null;
 };
 
+export const getActorProfileById = async (id: string, driver: Driver = db) => {
+  const [actor] = await driver.select()
+    .from(actors)
+    .innerJoin(profiles, eq(profiles.actorId, actors.id))
+    .where(eq(actors.id, id));
+
+  return actor;
+};
+
 export const createActor = async (
   values: typeof actors.$inferInsert,
   driver: Driver = db,

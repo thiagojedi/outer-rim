@@ -1,22 +1,30 @@
 import { define } from "../../../../../utils.ts";
+import { getActorProfileById } from "../../../../../federation/repositories/actor.ts";
 
 export const handler = define.handlers({
-  GET: () => {
+  async GET(ctx) {
+    const profileId = ctx.state.session.profileId;
+
+    if (!profileId) {
+      return Response.error();
+    }
+
+    const actor = await getActorProfileById(profileId);
+
     // Return account info
     // See https://docs.joinmastodon.org/methods/accounts/#verify_credentials
     return Response.json({
-      "id": "111585233051545705",
-      "username": "jedi",
-      "acct": "jedi",
-      "display_name": "Thiago, Cavalheiro Jedi",
+      "id": actor.actors.id,
+      "username": actor.actors.identifier,
+      "acct": actor.actors.identifier,
+      "display_name": actor.profiles.name,
       "locked": false,
-      "bot": false,
+      "bot": actor.profiles.bot,
       "discoverable": true,
       "indexable": true,
       "group": false,
-      "created_at": "2023-12-15T00:00:00.000Z",
-      "note":
-        "<p>Thiago, nicknamed &quot;Jedi&quot; by friends and colleagues. Lover of languages. Full snack dev. </p><p>Expect lots of jokes, dev rants, and minor updates from my day to day life.</p><p>Thiago, apelidado de &quot;Jedi&quot; pelos amigos e colegas. Amante de linguagens. Desenvolvedor full snack.</p><p>Espere um monte de piadas, reclamações do trabalho, e pequenas crônicas do meu dia a dia.</p><p>Posts in Português, English, and ocasionally Castellano. I do my best to mark the post language correctly, you may want to filter them out.</p><p>From :bandeira_rn: to the world</p>",
+      "created_at": actor.actors.created.toISOString(),
+      "note": actor.profiles.htmlBio,
       "url": "https://bolha.us/@jedi",
       "uri": "https://bolha.us/users/jedi",
       "avatar":
