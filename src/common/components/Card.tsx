@@ -1,10 +1,10 @@
-import { FunctionComponent, VNode } from "preact";
+import { ComponentChild, FunctionComponent } from "preact";
 
 type CardProps = Partial<{
   title: string;
   subtitle: string;
   image: string;
-  content: VNode;
+  content: ComponentChild;
   avatar: string;
   imageAlt: string;
   avatarAlt: string;

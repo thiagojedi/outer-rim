@@ -60,7 +60,7 @@ export const handler = define.handlers({
       });
     }
 
-    ctx.state.session = { auth: true, userId: user.id };
+    ctx.state.session = { auth: true, userId: user.id, profileId: "" };
 
     return authSuccess(ctx);
   },

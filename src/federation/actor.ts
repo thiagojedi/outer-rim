@@ -26,7 +26,7 @@ export const setupActor = (federation: Federation<unknown>) => {
         preferredUsername: identifier,
         // Display name
         name: user.name,
-        published: Temporal.Instant.from(user.created),
+        published: user.created.toTemporalInstant(),
         inbox: ctx.getInboxUri(identifier),
         endpoints: new Endpoints({
           sharedInbox: ctx.getInboxUri(),

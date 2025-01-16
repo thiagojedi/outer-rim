@@ -30,8 +30,8 @@ export const deleteFollow = async (
     ));
 };
 
-export const countFollowers = (actorId: number, driver: Driver = db) =>
+export const countFollowers = (actorId: string, driver: Driver = db) =>
   driver.$count(follows, eq(follows.followingId, actorId));
 
-export const countFollowing = (actorId: number, driver: Driver = db) =>
+export const countFollowing = (actorId: string, driver: Driver = db) =>
   driver.$count(follows, eq(follows.followerId, actorId));

@@ -142,7 +142,7 @@ export const follows = table("follows", {
 export const posts = table("posts", {
   id: uuid().primaryKey(),
   uri: text().notNull().unique(),
-  actorId: int().notNull().references(() => actors.id),
+  actorId: uuid().notNull().references(() => actors.id),
   url: url(),
   created: date().notNull().default(currentTime),
   content: text().notNull(),
