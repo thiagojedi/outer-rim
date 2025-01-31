@@ -4,7 +4,7 @@ import {
   countFollowersByActor,
   countFollowingByActor,
 } from "./repositories/follows.ts";
-import { countActorsPosts, getPosts } from "./repositories/posts.ts";
+import { countActorsPosts, getPostsFromActor } from "./repositories/posts.ts";
 import { db } from "../../db/client.ts";
 import { profiles } from "../../db/models.ts";
 
@@ -49,5 +49,5 @@ export const getProfileFromUsername = async (
 export const listPostsFromUsername = async (username: string) => {
   const user = await getActorFromUsername(username);
 
-  return getPosts(user.id);
+  return getPostsFromActor(user.id);
 };

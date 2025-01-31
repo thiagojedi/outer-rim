@@ -56,19 +56,20 @@ declare namespace Mastodon {
     sensitive: boolean;
     spoiler_text: string;
     visibility: Privacy;
-    language: string;
+    language: null | string;
     uri: string;
-    url: string;
+    url: null | string;
     replies_count: number;
     reblogs_count: number;
     favourites_count: number;
-    favourited: boolean;
-    reblogged: boolean;
-    muted: boolean;
-    bookmarked: boolean;
+    favourited?: boolean;
+    reblogged?: boolean;
+    muted?: boolean;
+    bookmarked?: boolean;
+    pinned?: boolean;
     content: string;
     reblog: Status | null;
-    application: {
+    application?: {
       name: string;
       website: null;
     };
@@ -77,7 +78,7 @@ declare namespace Mastodon {
     mentions: Mention[];
     tags: [];
     emojis: Emoji[];
-    card: Card;
+    card: null | Card;
     poll: null | Poll;
   };
 
