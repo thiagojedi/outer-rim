@@ -1,15 +1,15 @@
-import { define } from "../../../../../utils.ts";
-import { getActorProfileById } from "../../../../../federation/repositories/actor.ts";
+import { define } from "../../../../../../utils.ts";
+import { getActorProfileById } from "../../../../../../federation/repositories/actor.ts";
 import {
   countFollowers,
   countFollowing,
-} from "../../../../../federation/repositories/follow.ts";
+} from "../../../../../../federation/repositories/follow.ts";
 import {
   countPosts,
   getLastPostDate,
-} from "../../../../../federation/repositories/post.ts";
-import { formatDate } from "../../../../../common/helpers/date.ts";
-import { stripHtml } from "../../../../../common/helpers/text.ts";
+} from "../../../../../../federation/repositories/post.ts";
+import { formatDate } from "../../../../../../common/helpers/date.ts";
+import { stripHtml } from "../../../../../../common/helpers/text.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {

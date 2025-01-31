@@ -1,8 +1,8 @@
 import { STATUS_CODE } from "@std/http";
 
 import { z } from "zod";
-import { createClientApp } from "../../../../auth/repositories/clients.ts";
-import { define } from "../../../../utils.ts";
+import { createClientApp } from "../../../../../auth/repositories/clients.ts";
+import { define } from "../../../../../utils.ts";
 
 const appPayloadSchema = z.object({
   client_name: z.string(),
