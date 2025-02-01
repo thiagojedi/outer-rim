@@ -1,6 +1,6 @@
 import { define } from "../../../utils.ts";
 import { UserForm } from "../../../islands/UserForm.tsx";
-import { createActor } from "../../../federation/repositories/actor.ts";
+import { upsertActor } from "../../../federation/repositories/actor.ts";
 import federation from "../../../federation/mod.ts";
 import { db } from "../../../db/client.ts";
 import { profiles } from "../../../db/models.ts";
@@ -21,7 +21,7 @@ export const handler = define.handlers({
     const body = formDataToObject(formData);
 
     await db.transaction(async (t) => {
-      const { id: actorId } = await createActor({
+      const { id: actorId } = await upsertActor({
         userId: 1,
         identifier: username,
         uri: context.getActorUri(username).href,

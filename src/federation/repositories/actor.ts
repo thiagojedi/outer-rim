@@ -30,7 +30,7 @@ export const getActorProfileById = async (id: string, driver: Driver = db) => {
   return actor;
 };
 
-export const createActor = async (
+export const upsertActor = async (
   values: typeof actors.$inferInsert,
   driver: Driver = db,
 ) => {

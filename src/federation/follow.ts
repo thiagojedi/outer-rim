@@ -5,7 +5,7 @@ import {
   InboxListenerSetters,
   Undo,
 } from "@fedify/fedify";
-import { createActor, getActorByIdentifier } from "./repositories/actor.ts";
+import { getActorByIdentifier, upsertActor } from "./repositories/actor.ts";
 import { createFollow, deleteFollow } from "./repositories/follow.ts";
 
 export const setupFollows = (inbox: InboxListenerSetters<unknown>) => {
@@ -29,9 +29,11 @@ export const setupFollows = (inbox: InboxListenerSetters<unknown>) => {
 
     const { id: followingId } = await getActorByIdentifier(object.identifier);
 
-    const { id: followerId } = await createActor({
+    const handle = await getActorHandle(follower);
+    const { id: followerId } = await upsertActor({
       uri: follower.id.href,
-      handle: await getActorHandle(follower),
+      identifier: handle,
+      handle: handle,
       inboxUrl: follower.inboxId,
       sharedInboxUrl: follower.endpoints?.sharedInbox,
       url: follower.url?.href ? new URL(follower.url.href) : null,
