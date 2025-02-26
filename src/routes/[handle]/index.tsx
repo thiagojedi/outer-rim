@@ -6,6 +6,7 @@ import {
   getProfileFromUsername,
   listPostsFromUsername,
 } from "../../modules/microblog/profile.ts";
+import { relativeTime } from "../../common/helpers/date.ts";
 
 export const handler = define.handlers({
   GET: async (ctx) => {
@@ -46,9 +47,37 @@ const ProfilePage = define.page<typeof handler>(
           <pre><code>{JSON.stringify(profile, undefined, 2)}</code></pre>
         </details>
 
+        {posts.length || (
+          <section className="section has-text-centered">
+            User has no public posts.
+          </section>
+        )}
+
         {posts.map((post) => {
           return (
-            <article key={post.id}>
+            <article key={post.id} className="media">
+              {profile.avatar && (
+                <figure class="media-left">
+                  <p class="image is-64x64">
+                    <img src={profile.avatar} />
+                  </p>
+                </figure>
+              )}
+              <div class="media-content">
+                <div class="content">
+                  <p>
+                    <strong>{profile.display_name}</strong>{" "}
+                    <small>@{profile.username}</small>{" "}
+                    <small>
+                      <time dateTime={post.created.toISOString()}>
+                        {relativeTime(post.created)}
+                      </time>
+                    </small>
+                    <br />
+                    {post.content}
+                  </p>
+                </div>
+              </div>
               <details>
                 <summary>Raw Post</summary>
                 <pre><code>{JSON.stringify(post, undefined, 2)}</code></pre>
