@@ -1,25 +1,78 @@
-import { useSignal } from "@preact/signals";
-import Counter from "../islands/Counter.tsx";
+import { page } from "fresh";
+import { eq, isNotNull } from "drizzle-orm";
+import { db } from "../db/client.ts";
+import { actors, images, profiles } from "../db/models.ts";
+import { define } from "../utils.ts";
+import { Card } from "../common/components/Card.tsx";
+import { formatDate } from "../common/helpers/date.ts";
 
-export default function Home() {
-  const count = useSignal(3);
-  return (
-    <div class="px-4 py-8 mx-auto bg-[#86efac]">
-      <div class="max-w-screen-md mx-auto flex flex-col items-center justify-center">
-        <img
-          class="my-6"
-          src="/logo.svg"
-          width="128"
-          height="128"
-          alt="the Fresh logo: a sliced lemon dripping with juice"
-        />
-        <h1 class="text-4xl font-bold">Welcome to Fresh</h1>
-        <p class="my-4">
-          Try updating this message in the
-          <code class="mx-2">./routes/index.tsx</code> file, and refresh.
-        </p>
-        <Counter count={count} />
+export const handler = define.handlers({
+  GET: async () => {
+    const users = await db
+      .select({
+        id: actors.id,
+        handle: actors.identifier,
+        name: profiles.name,
+        bio: profiles.htmlBio,
+        avatar: images.url,
+      })
+      .from(actors)
+      .innerJoin(profiles, eq(profiles.actorId, actors.id))
+      .leftJoin(images, eq(images.id, profiles.avatarId))
+      .where(isNotNull(actors.identifier));
+
+    return page({ profiles: users });
+  },
+});
+
+export default define.page<typeof handler>(({ data: { profiles } }) => (
+  <>
+    <header className="section has-text-centered">
+      <div className="container">
+        <h1 className="title">Welcome to the Outer Rim</h1>
       </div>
-    </div>
-  );
-}
+    </header>
+    <main>
+      {profiles && (
+        <section className="section">
+          <div className="container">
+            <h1 className="title">Profiles</h1>
+            <ul>
+              {profiles.map((profile) => (
+                <li key={profile.id}>
+                  <Card
+                    title={<a href={`/@${profile.handle}`}>{profile.name}</a>}
+                    subtitle={`@${profile.handle}`}
+                    avatar={profile.avatar ?? undefined}
+                    content={<div className="content">{profile.bio}</div>}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+      <section className="section">
+        <div className="container">
+          <h1 className="title">About</h1>
+          <p>
+            This is a single user microblog server, connected to others social
+            services through the ActivityPub protocol. In other words, it is
+            part of the FediVerse.
+          </p>
+        </div>
+      </section>
+    </main>
+    <footer className="footer">
+      <div className="content has-text-centered">
+        <div className="columns">
+          <div className="column">Made with 🥥🥤 in Brazil</div>
+          <div className="column">
+            <a href="https://github.com/thiagojedi/outer-rim">Source</a>
+          </div>
+          <div className="column">{formatDate(new Date(), "yyyy")}</div>
+        </div>
+      </div>
+    </footer>
+  </>
+));

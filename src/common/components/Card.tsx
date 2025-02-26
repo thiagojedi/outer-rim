@@ -1,8 +1,8 @@
 import { ComponentChild, FunctionComponent } from "preact";
 
 type CardProps = Partial<{
-  title: string;
-  subtitle: string;
+  title: ComponentChild;
+  subtitle: ComponentChild;
   image: string;
   content: ComponentChild;
   avatar: string;
