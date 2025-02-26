@@ -1,5 +1,5 @@
 import { define } from "../../utils.ts";
-import federation from "../../federation/mod.ts";
+import federation from "../../modules/federation/mod.ts";
 import { page } from "fresh";
 import { STATUS_CODE } from "@std/http";
 import {

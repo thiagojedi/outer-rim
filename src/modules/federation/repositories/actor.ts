@@ -1,6 +1,6 @@
 import { eq, sql } from "drizzle-orm";
-import { db, Driver } from "../../db/client.ts";
-import { actors, profiles } from "../../db/models.ts";
+import { db, Driver } from "../../../db/client.ts";
+import { actors, profiles } from "../../../db/models.ts";
 
 export const getActorByIdentifier = async (
   identifier: string,
@@ -11,10 +11,9 @@ export const getActorByIdentifier = async (
     name: profiles.name,
     created: actors.created,
     url: actors.url,
+    bio: profiles.htmlBio,
   })
-    .from(
-      actors,
-    )
+    .from(actors)
     .innerJoin(profiles, eq(profiles.actorId, actors.id))
     .where(eq(actors.identifier, identifier));
 
