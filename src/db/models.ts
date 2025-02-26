@@ -118,10 +118,8 @@ export const authCodeRelations = relations(authCodes, ({ one }) => ({
 //#region Federation
 
 export const keys = table("keys", {
-  userId: int().notNull().references(() => users.id),
-  type: text({
-    enum: ["Ed25519", "RSASSA-PKCS1-v1_5"],
-  }),
+  userId: text().notNull().references(() => actors.id),
+  type: text({ enum: ["Ed25519", "RSASSA-PKCS1-v1_5"] }),
   privateKey: text().notNull(),
   publicKey: text().notNull(),
   created: date().notNull().default(currentTime),

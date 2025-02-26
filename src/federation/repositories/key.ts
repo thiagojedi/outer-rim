@@ -1,7 +1,7 @@
 import { db, Driver } from "../../db/client.ts";
 import { keys } from "../../db/models.ts";
 
-export const getKeysForUser = (userId: number, driver: Driver = db) =>
+export const getKeysForUser = (userId: string, driver: Driver = db) =>
   driver.query.keys.findMany({
     where: (keys, { eq }) => eq(keys.userId, userId),
   });

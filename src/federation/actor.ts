@@ -7,14 +7,12 @@ import {
   Person,
 } from "@fedify/fedify";
 import { getActorByIdentifier } from "./repositories/actor.ts";
-import { getUserByUsernameOrEmail } from "../auth/repositories/users.ts";
 import { createKey, getKeysForUser } from "./repositories/key.ts";
 import { countFollowers, countFollowing } from "./repositories/follow.ts";
 
 export const setupActor = (federation: Federation<unknown>) => {
-  federation.setActorDispatcher(
-    "/users/{identifier}",
-    async (ctx, identifier) => {
+  federation
+    .setActorDispatcher("/@{identifier}", async (ctx, identifier) => {
       const user = await getActorByIdentifier(identifier);
 
       if (!user) return null;
@@ -52,49 +50,49 @@ export const setupActor = (federation: Federation<unknown>) => {
         //   mediaType: "image/jpeg"
         // })
       });
-    },
-  ).setKeyPairsDispatcher(async (_, identifier) => {
-    const user = await getUserByUsernameOrEmail(identifier);
+    })
+    .setKeyPairsDispatcher(async (_, identifier) => {
+      const user = await getActorByIdentifier(identifier);
 
-    if (!user) {
-      return [];
-    }
+      if (!user) {
+        return [];
+      }
 
-    const rows = await getKeysForUser(user.id);
-    const keysMap = Object.fromEntries(rows.map((row) => [row.type, row]));
+      const rows = await getKeysForUser(user.id);
+      const keysMap = Object.fromEntries(rows.map((row) => [row.type, row]));
 
-    return (await Promise.allSettled(
-      (["RSASSA-PKCS1-v1_5", "Ed25519"] as const).map(
-        async (keyType) => {
-          if (keysMap[keyType]) {
-            return {
-              privateKey: await importJwk(
-                JSON.parse(keysMap[keyType].privateKey),
-                "private",
-              ),
-              publicKey: await importJwk(
-                JSON.parse(keysMap[keyType].publicKey),
-                "public",
-              ),
-            } as CryptoKeyPair;
-          } else {
-            const { privateKey, publicKey } = await generateCryptoKeyPair(
-              keyType,
-            );
+      return (await Promise.allSettled(
+        (["RSASSA-PKCS1-v1_5", "Ed25519"] as const).map(
+          async (keyType) => {
+            if (keysMap[keyType]) {
+              return {
+                privateKey: await importJwk(
+                  JSON.parse(keysMap[keyType].privateKey),
+                  "private",
+                ),
+                publicKey: await importJwk(
+                  JSON.parse(keysMap[keyType].publicKey),
+                  "public",
+                ),
+              } as CryptoKeyPair;
+            } else {
+              const { privateKey, publicKey } = await generateCryptoKeyPair(
+                keyType,
+              );
 
-            await createKey({
-              userId: user.id,
-              type: keyType,
-              privateKey: JSON.stringify(await exportJwk(privateKey)),
-              publicKey: JSON.stringify(await exportJwk(publicKey)),
-            });
+              await createKey({
+                userId: user.id,
+                type: keyType,
+                privateKey: JSON.stringify(await exportJwk(privateKey)),
+                publicKey: JSON.stringify(await exportJwk(publicKey)),
+              });
 
-            return { privateKey, publicKey } as CryptoKeyPair;
-          }
-        },
-      ),
-    )).filter((r) => r.status === "fulfilled").map((r) => r.value);
-  });
+              return { privateKey, publicKey } as CryptoKeyPair;
+            }
+          },
+        ),
+      )).filter((r) => r.status === "fulfilled").map((r) => r.value);
+    });
 
   federation
     .setFollowersDispatcher(
@@ -107,10 +105,11 @@ export const setupActor = (federation: Federation<unknown>) => {
       return countFollowers(id);
     });
 
-  federation.setFollowingDispatcher(
-    "/users/{identifier}/following",
-    () => ({ items: [] }),
-  )
+  federation
+    .setFollowingDispatcher(
+      "/users/{identifier}/following",
+      () => ({ items: [] }),
+    )
     .setCounter(async (_ctx, identifier) => {
       const { id } = await getActorByIdentifier(identifier);
 
