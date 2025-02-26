@@ -1,7 +1,7 @@
 import { define } from "../../../utils.ts";
 import { UserForm } from "../../../islands/UserForm.tsx";
-import { createActor } from "../../../federation/repositories/actor.ts";
-import federation from "../../../federation/mod.ts";
+import { createActor } from "../../../modules/federation/repositories/actor.ts";
+import federation from "../../../modules/federation/mod.ts";
 import { db } from "../../../db/client.ts";
 import { profiles } from "../../../db/models.ts";
 import { formDataToObject } from "../../../common/helpers/object.ts";

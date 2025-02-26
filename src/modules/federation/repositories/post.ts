@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
-import { db, Driver } from "../../db/client.ts";
-import { actors, posts } from "../../db/models.ts";
+import { db, Driver } from "../../../db/client.ts";
+import { actors, posts } from "../../../db/models.ts";
 
 export const getPost = async (
   username: string,

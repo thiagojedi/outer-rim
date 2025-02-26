@@ -1,5 +1,5 @@
-import { db, Driver } from "../../db/client.ts";
-import { keys } from "../../db/models.ts";
+import { db, Driver } from "../../../db/client.ts";
+import { keys } from "../../../db/models.ts";
 
 export const getKeysForUser = (userId: string, driver: Driver = db) =>
   driver.query.keys.findMany({

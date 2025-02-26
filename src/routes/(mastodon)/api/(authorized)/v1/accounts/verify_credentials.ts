@@ -1,13 +1,13 @@
 import { define } from "../../../../../../utils.ts";
-import { getActorProfileById } from "../../../../../../federation/repositories/actor.ts";
+import { getActorProfileById } from "../../../../../../modules/federation/repositories/actor.ts";
 import {
   countFollowers,
   countFollowing,
-} from "../../../../../../federation/repositories/follow.ts";
+} from "../../../../../../modules/federation/repositories/follow.ts";
 import {
   countPosts,
   getLastPostDate,
-} from "../../../../../../federation/repositories/post.ts";
+} from "../../../../../../modules/federation/repositories/post.ts";
 import { formatDate } from "../../../../../../common/helpers/date.ts";
 import { stripHtml } from "../../../../../../common/helpers/text.ts";
 

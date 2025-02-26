@@ -38,7 +38,7 @@ export const setupActor = (federation: Federation<unknown>) => {
         suspended: false,
         memorial: false,
         // Bio
-        // summary: '',
+        summary: user.bio,
         // Avatar
         // icon: new Image({
         //   url: new URL(""),

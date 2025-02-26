@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import { actors, follows } from "../../db/models.ts";
-import { db, Driver } from "../../db/client.ts";
+import { actors, follows } from "../../../db/models.ts";
+import { db, Driver } from "../../../db/client.ts";
 
 export const createFollow = (
   values: typeof follows.$inferInsert,
